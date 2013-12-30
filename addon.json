@@ -1,0 +1,11 @@
+{
+	"title"		:	"PrivacyBox",
+	"type"		:	"tool",
+	"tags"		:	[ "build", "fun" ],
+	"ignore"	:
+	[
+		"*.md",
+		"*.txt",
+		"*.git*"
+	]
+}
