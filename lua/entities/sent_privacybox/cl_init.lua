@@ -15,7 +15,7 @@ function ENT:Draw()
 		name=self.owner:Nick()
 	end
 	cam.Start3D2D( self:LocalToWorld(Vector(0,0,150)), self:LocalToWorldAngles(Angle(0,90,90)), 1 )
-		draw.DrawText(name, "ScoreboardText", 0, 0, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER )
+		draw.DrawText(name, "HudSelectionText", 0, 0, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER )
 	cam.End3D2D()
 end
 
