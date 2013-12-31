@@ -65,11 +65,8 @@ function ENT:SpawnParts()
 	*/
 	
 	//parts	
-	self.door=self:MakePart({"prop_physics", "models/drmatt/privacybox/door.mdl"}, Vector(420, 0, 11.802734), Angle(0,180,0), true)
-	self.door.privacybox_part=true
-	self.portal=self:MakePart("sent_privacybox_portal", self:WorldToLocal(self.door:GetPos()), self.door:GetAngles(), true)
-	self.portal:SetParent(self)
-	self.portal.mode=true
+	self.door=self:MakePart("sent_privacybox_door", Vector(420, 0, 11.802734), Angle(0,180,0), true)
+
 end
 
 function ENT:MakePart(class,vec,ang,weld)
@@ -171,6 +168,7 @@ function ENT:Think()
 			for k,v in pairs(self.exterior.occupants) do
 				if self:GetPos():Distance(v:GetPos()) > 700 then
 					self.exterior:PlayerExit(v,true)
+					self.exterior.usecur=CurTime()+1
 				end
 			end
 		end

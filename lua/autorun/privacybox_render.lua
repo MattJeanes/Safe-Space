@@ -6,25 +6,26 @@ if SERVER then
 	end)
 elseif CLIENT then
 	local rt,mat
-	local size=1024
+	local w,h=512,1024
 	local CamData = {}
 	CamData.x = 0
 	CamData.y = 0
 	CamData.fov = 90
 	CamData.drawviewmodel = false
-	CamData.w = size
-	CamData.h = size
+	CamData.w = w
+	CamData.h = h
 	
 	hook.Add("InitPostEntity", "PrivacyBox-Render", function()
-		rt=GetRenderTarget("tardis_rt",size,size,false)
-		mat=Material("models/drmatt/privacybox/window")
+		rt=GetRenderTarget("tardis_rt",w,h,false)
+		mat=Material("models/drmatt/privacybox/portal")
 		mat:SetTexture("$basetexture",rt)
 	end)
 	
 	hook.Add("RenderScene", "PrivacyBox-Render", function()
 		if not tobool(GetConVarNumber("privacyboxint_window")) then return end
 		local exterior=LocalPlayer().privacybox
-		if IsValid(exterior) then
+		if IsValid(exterior) and IsValid(exterior.interior) then
+			local interior=exterior.interior
 			CamData.origin = exterior:LocalToWorld(Vector(23, 0, 60))
 			CamData.angles = exterior:GetAngles()
 			LocalPlayer().privacybox_render=true
@@ -39,6 +40,7 @@ elseif CLIENT then
 			LocalPlayer().privacybox_render=false
 		end
 	end)
+	
 	/*
 	hook.Add( "PreDrawHalos", "PrivacyBox-Render", function() // not ideal, but the new scanner sorta forced me to do this
 		if tobool(GetConVarNumber("tardisint_halos"))==false then return end

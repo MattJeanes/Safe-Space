@@ -12,14 +12,21 @@ function ENT:Initialize()
 	self.phys = self:GetPhysicsObject()
 	self:SetNWEntity("exterior",self.exterior)
 	self.usecur=0
-	self.mode=false
 	if (self.phys:IsValid()) then
 		self.phys:EnableMotion(false)
 	end
 	
 	self:SetNotSolid(true)
 	self:SetTrigger(true)
-	self:SetMaterial("models/props_combine/stasisfield_beam")
+end
+
+function ENT:SetMode(mode)
+	self.mode=mode
+	if mode then
+		self:SetMaterial("")
+	else
+		self:SetMaterial("models/props_lab/cornerunit_cloud")
+	end
 end
 
 function ENT:Touch(ent)

@@ -89,6 +89,7 @@ function ENT:Initialize()
 	self.portal.exterior=self
 	self.portal.interior=self.interior
 	self.portal.owner=self.owner
+	self.portal:SetMode(false)
 	self.portal:SetParent(self)
 	self.portal:Spawn()
 	self.portal:Activate()
@@ -138,7 +139,7 @@ function ENT:OnRemove()
 	end
 end
 
-function ENT:PlayerEnter( ply, override )
+function ENT:PlayerEnter( ply )
 	if ply.privacybox and IsValid(ply.privacybox) then
 		ply.privacybox:PlayerExit( ply )
 	end
@@ -149,27 +150,30 @@ function ENT:PlayerEnter( ply, override )
 		net.WriteEntity(self)
 	net.Broadcast()
 	if self.interior and IsValid(self.interior) and IsValid(self.interior.door) then
-		ply:SetPos(self.interior.door:GetPos()+(self.interior.door:GetForward()*35)+self:WorldToLocal(ply:GetPos())+Vector(0,0,5))
+		ply:SetPos(self.interior.door:GetPos()+(self.interior.door:GetForward()*40)+self:WorldToLocal(ply:GetPos())+Vector(0,0,5))
 		local ang=(ply:EyeAngles()-self:GetAngles())+self.interior:GetAngles()
 		local fwd=(ply:GetVelocity():Angle()+(self.interior:GetAngles()-self:GetAngles())):Forward()
 		ply:SetEyeAngles(Angle(ang.p,ang.y,0))
 		ply:SetLocalVelocity(Vector(fwd.x,fwd.y,0)*ply:GetVelocity():Length())
+		//TODO: Fix it messing around when the exterior is not upright
 	end
 	table.insert(self.occupants,ply)
 end
 
-function ENT:PlayerExit( ply, override )
+function ENT:PlayerExit( ply, forced, override )
 	if ply:InVehicle() then ply:ExitVehicle() end
 	net.Start("Player-SetPrivacyBox")
 		net.WriteEntity(ply)
 		net.WriteEntity(NULL)
 	net.Broadcast()
 	ply.privacybox=nil
-	ply:SetPos(self:GetPos()+(self:GetForward()*35)+self.interior.door:WorldToLocal(ply:GetPos())+Vector(0,0,5))
+	ply:SetPos(self:GetPos()+(self:GetForward()*40)+(forced and Vector(0,0,0) or self.interior.door:WorldToLocal(ply:GetPos())+Vector(0,0,5)))
 	local ang=(ply:EyeAngles()-self.interior:GetAngles())+self:GetAngles()
 	local fwd=(ply:GetVelocity():Angle()+(self:GetAngles()-self.interior:GetAngles())):Forward()
 	ply:SetEyeAngles(Angle(ang.p,ang.y,0))
-	ply:SetLocalVelocity(Vector(fwd.x,fwd.y,0)*ply:GetVelocity():Length())
+	if not forced then
+		ply:SetLocalVelocity(Vector(fwd.x,fwd.y,0)*ply:GetVelocity():Length())
+	end
 	if self.occupants then
 		for k,v in pairs(self.occupants) do
 			if v==ply then

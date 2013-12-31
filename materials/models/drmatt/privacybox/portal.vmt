@@ -1,4 +1,7 @@
 "VertexLitGeneric"
 {
 	"$basetexture" "models/drmatt/privacybox/portal"
+	"$model" 1
+	"$nodecal" 1
+	"$selfillum" 1
 }

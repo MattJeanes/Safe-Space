@@ -19,8 +19,8 @@ for k,v in pairs(special_checkbox_options) do
 end
 
 CreateClientConVar("privacyboxint_light_r", "255", true)
-CreateClientConVar("privacyboxint_light_g", "50", true)
-CreateClientConVar("privacyboxint_light_b", "0", true)
+CreateClientConVar("privacyboxint_light_g", "255", true)
+CreateClientConVar("privacyboxint_light_b", "255", true)
 
 CreateClientConVar("privacyboxint_musicvol", "1", true)
 
@@ -65,7 +65,7 @@ hook.Add("PopulateToolMenu", "PrivacyBox-PopulateToolMenu", function()
 		local button = vgui.Create("DButton")
 		button:SetText("Reset Colors")
 		button.DoClick = function(self)
-			Mixer1:SetColor(Color(255,50,0))
+			Mixer1:SetColor(Color(255,255,255))
 		end
 		panel:AddItem(button)
 		
