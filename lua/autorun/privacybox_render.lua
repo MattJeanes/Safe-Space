@@ -6,7 +6,7 @@ if SERVER then
 	end)
 elseif CLIENT then
 	local rt,mat
-	local w,h=512,1024
+	local w,h=1024,2048
 	local CamData = {}
 	CamData.x = 0
 	CamData.y = 0
@@ -26,7 +26,7 @@ elseif CLIENT then
 		local exterior=LocalPlayer().privacybox
 		if IsValid(exterior) and IsValid(exterior.interior) then
 			local interior=exterior.interior
-			CamData.origin = exterior:LocalToWorld(Vector(23, 0, 60))
+			CamData.origin = exterior:LocalToWorld(Vector(0, 0, 60))
 			CamData.angles = exterior:GetAngles()
 			LocalPlayer().privacybox_render=true
 			local old = render.GetRenderTarget()

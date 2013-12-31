@@ -126,7 +126,7 @@ end
 function ENT:OnRemove()
 	if self.occupants then
 		for k,v in pairs(self.occupants) do
-			self:PlayerExit(v,true)
+			self:PlayerExit(v,true,true)
 		end
 	end
 	if self.interior and IsValid(self.interior) then
@@ -139,9 +139,15 @@ function ENT:OnRemove()
 	end
 end
 
-function ENT:PlayerEnter( ply )
+function ENT:PlayerAllowed( ply )
+	return (gamemode.Call("PhysgunPickup", ply, self))
+end
+
+function ENT:PlayerEnter( ply, forced )
 	if ply.privacybox and IsValid(ply.privacybox) then
-		ply.privacybox:PlayerExit( ply )
+		ply.oldprivacybox=ply.privacybox
+		ply.privacybox.usecur=CurTime()+1
+		ply.privacybox:PlayerExit( ply, true )
 	end
 	ply.privacybox=self
 	
@@ -150,11 +156,13 @@ function ENT:PlayerEnter( ply )
 		net.WriteEntity(self)
 	net.Broadcast()
 	if self.interior and IsValid(self.interior) and IsValid(self.interior.door) then
-		ply:SetPos(self.interior.door:GetPos()+(self.interior.door:GetForward()*40)+self:WorldToLocal(ply:GetPos())+Vector(0,0,5))
+		local pos=self:WorldToLocal(ply:GetPos())
+		ply:SetPos(self.interior.door:GetPos()+(self.interior.door:GetForward()*40)+Vector(0,pos.y,pos.z+(IsValid(ply.oldprivacybox) and ply.oldprivacybox:WorldToLocal(self:GetPos()).z+10 or 10)))
 		local ang=(ply:EyeAngles()-self:GetAngles())+self.interior:GetAngles()
 		local fwd=(ply:GetVelocity():Angle()+(self.interior:GetAngles()-self:GetAngles())):Forward()
 		ply:SetEyeAngles(Angle(ang.p,ang.y,0))
 		ply:SetLocalVelocity(Vector(fwd.x,fwd.y,0)*ply:GetVelocity():Length())
+		ply.oldprivacybox=nil
 		//TODO: Fix it messing around when the exterior is not upright
 	end
 	table.insert(self.occupants,ply)
@@ -167,11 +175,13 @@ function ENT:PlayerExit( ply, forced, override )
 		net.WriteEntity(NULL)
 	net.Broadcast()
 	ply.privacybox=nil
-	ply:SetPos(self:GetPos()+(self:GetForward()*40)+(forced and Vector(0,0,0) or self.interior.door:WorldToLocal(ply:GetPos())+Vector(0,0,5)))
-	local ang=(ply:EyeAngles()-self.interior:GetAngles())+self:GetAngles()
-	local fwd=(ply:GetVelocity():Angle()+(self:GetAngles()-self.interior:GetAngles())):Forward()
-	ply:SetEyeAngles(Angle(ang.p,ang.y,0))
-	if not forced then
+	if forced then
+		ply:SetPos(self:GetPos()+(self:GetForward()*40))
+	else
+		ply:SetPos(self:GetPos()+(self:GetForward()*40)+self.interior.door:WorldToLocal(ply:GetPos())+Vector(0,0,5))
+		local ang=(ply:EyeAngles()-self.interior:GetAngles())+self:GetAngles()
+		local fwd=(ply:GetVelocity():Angle()+(self:GetAngles()-self.interior:GetAngles())):Forward()
+		ply:SetEyeAngles(Angle(ang.p,ang.y,0))
 		ply:SetLocalVelocity(Vector(fwd.x,fwd.y,0)*ply:GetVelocity():Length())
 	end
 	if self.occupants then
@@ -205,6 +215,10 @@ function ENT:Think()
 			if not IsValid(v) then
 				self.occupants[k]=nil
 				continue
+			end
+			if not self:PlayerAllowed(v) then
+				self:PlayerExit(v)
+				self.usecur=CurTime()+1
 			end
 		end
 	end
