@@ -23,6 +23,7 @@ end
 //TODO: Add an option to turn off window and fix all this up to show the anim texture.
 function ENT:SetMode(mode)
 	self.mode=mode
+	self:SetNWBool("mode",mode)
 	if mode then
 		self:SetMaterial("")
 	else
@@ -32,12 +33,20 @@ end
 
 function ENT:Touch(ent)
 	if not IsValid(self.exterior) then return end
-	if ent:IsPlayer() and CurTime()>self.exterior.usecur and self.exterior:PlayerAllowed(ent) then
+	if ent==self.exterior or ent.privacybox_part then return end
+	if CurTime()>self.exterior.plycur and ent:IsPlayer() and self.exterior:PlayerAllowed(ent) then
 		if self.mode then
 			self.exterior:PlayerExit(ent)
 		else
 			self.exterior:PlayerEnter(ent)
 		end
-		self.exterior.usecur=CurTime()+1
+		self.exterior.plycur=CurTime()+1
+	elseif CurTime()>self.exterior.propcur and not ent:IsPlayer() and self.exterior:PropAllowed(ent) then
+		if self.mode then
+			self.exterior:PropExit(ent)
+		else
+			self.exterior:PropEnter(ent)
+		end
+		self.exterior.propcur=CurTime()+1
 	end
 end

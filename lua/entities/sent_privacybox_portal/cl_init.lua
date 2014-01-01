@@ -1,5 +1,7 @@
 include('shared.lua')
 
 function ENT:Draw()
-	self:DrawModel()
+	if LocalPlayer().privacybox==self:GetNWEntity("exterior", NULL) or not self:GetNWBool("mode",false) then
+		self:DrawModel()
+	end
 end

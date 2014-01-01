@@ -10,6 +10,7 @@ function ENT:Initialize()
 	self:SetRenderMode( RENDERMODE_NORMAL )
 	self:SetColor(Color(255,255,255,255))
 	self.phys = self:GetPhysicsObject()
+	self:SetNWEntity("exterior",self.exterior)
 	if (self.phys:IsValid()) then
 		self.phys:EnableMotion(false)
 	end
@@ -24,11 +25,7 @@ function ENT:Initialize()
 	self.portal:SetParent(self)
 	self.portal:Spawn()
 	self.portal:Activate()
-	if IsValid(self.owner) then
-		if SPropProtection then
-			SPropProtection.PlayerMakePropOwner(self.owner, self.portal)
-		else
-			gamemode.Call("CPPIAssignOwnership", self.owner, self.portal)
-		end
+	if IsValid(self.owner) and CPPI then
+		self.portal:CPPISetOwner(self.owner)
 	end
 end

@@ -163,12 +163,13 @@ function ENT:Use( ply )
 end
 
 function ENT:Think()
+	//TODO: Check if people are near us (let in if allowed (should fix nesting)|repel if not)
 	if self.exterior and IsValid(self.exterior) then
 		if self.exterior.occupants then
 			for k,v in pairs(self.exterior.occupants) do
 				if self:GetPos():Distance(v:GetPos()) > 700 then
 					self.exterior:PlayerExit(v,true)
-					self.exterior.usecur=CurTime()+1
+					self.exterior.plycur=CurTime()+1
 				end
 			end
 		end

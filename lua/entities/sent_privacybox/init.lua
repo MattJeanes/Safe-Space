@@ -24,7 +24,7 @@ end)
 function ENT:SpawnFunction( ply, tr, ClassName )
 	if (  !tr.Hit ) then return end
 
-	local SpawnPos = tr.HitPos + tr.HitNormal * 12.7
+	local SpawnPos = tr.HitPos + tr.HitNormal
 	local ent = ents.Create( ClassName )
 	ent:SetPos( SpawnPos )
 	local ang=Angle(0,(ply:GetPos()-SpawnPos):Angle().y,0)
@@ -49,7 +49,8 @@ function ENT:Initialize()
 		self.phys:Wake()
 	end
 	
-	self.usecur=0	
+	self.plycur=0	
+	self.propcur=0	
 	self.occupants={}
 	
 	// this is a bit hacky but from testing it seems to work well
@@ -75,12 +76,8 @@ function ENT:Initialize()
 	self.interior.owner=self.owner
 	self.interior:Spawn()
 	self.interior:Activate()
-	if IsValid(self.owner) then
-		if SPropProtection then
-			SPropProtection.PlayerMakePropOwner(self.owner, self.interior)
-		else
-			gamemode.Call("CPPIAssignOwnership", self.owner, self.interior)
-		end
+	if IsValid(self.owner) and CPPI then
+		self.interior:CPPISetOwner(self.owner)
 	end
 	
 	self.portal=ents.Create("sent_privacybox_portal")
@@ -93,12 +90,8 @@ function ENT:Initialize()
 	self.portal:SetParent(self)
 	self.portal:Spawn()
 	self.portal:Activate()
-	if IsValid(self.owner) then
-		if SPropProtection then
-			SPropProtection.PlayerMakePropOwner(self.owner, self.portal)
-		else
-			gamemode.Call("CPPIAssignOwnership", self.owner, self.portal)
-		end
+	if IsValid(self.owner) and CPPI then
+		self.portal:CPPISetOwner(self.owner)
 	end
 end
 
@@ -117,10 +110,6 @@ if WireLib then
 end
 
 function ENT:Use( ply, caller )
-	if CurTime()>self.usecur then
-		self.usecur=CurTime()+1
-		self:PlayerEnter(ply)
-	end
 end
 
 function ENT:OnRemove()
@@ -139,14 +128,73 @@ function ENT:OnRemove()
 	end
 end
 
+function ENT:PropEnter( ent )
+	if ent==self or ent.privacybox_part then return end
+	if self.interior and IsValid(self.interior) and IsValid(self.interior.door) then
+		local phys=ent:GetPhysicsObject()
+		local fwd,vel
+		if IsValid(phys) then
+			vel=phys:GetVelocity()
+			fwd=(vel:Angle()+(self.interior:GetAngles()-self:GetAngles())):Forward()
+		end
+		ent:ForcePlayerDrop()
+		local pos=self:WorldToLocal(ent:GetPos())
+		ent:SetPos(self.interior.door:GetPos()+(self.interior.door:GetForward()*50)+Vector(0,pos.y,pos.z))
+		local ang=(ent:GetAngles()-self:GetAngles())+self.interior:GetAngles()
+		ent:SetAngles(ang)
+		if IsValid(phys) then
+			phys:SetVelocityInstantaneous(Vector(fwd.x,fwd.y,0)*vel:Length())
+		end
+	end
+end
+
+function ENT:PropExit( ent )
+	if ent==self or ent.privacybox_part then return end
+	if self.interior and IsValid(self.interior) and IsValid(self.interior.door) then
+		local phys=ent:GetPhysicsObject()
+		local fwd,vel
+		if IsValid(phys) then
+			vel=phys:GetVelocity()
+			fwd=(vel:Angle()+(self:GetAngles()-self.interior:GetAngles())):Forward()
+		end
+		ent:ForcePlayerDrop()
+		ent:SetPos(self:GetPos()+(self:GetForward()*50)+self.interior.door:WorldToLocal(ent:GetPos()))
+		local ang=(ent:GetAngles()-self.interior:GetAngles())+self:GetAngles()
+		ent:SetAngles(ang)
+		if IsValid(phys) then
+			phys:SetVelocityInstantaneous(Vector(fwd.x,fwd.y,0)*vel:Length())
+		end
+	end
+end
+
+function ENT:PropAllowed( ent )
+	if CPPI then
+		local ply
+		if IsValid(ent.heldby) then
+			ply=ent.heldby
+		elseif IsValid(ent:CPPIGetOwner()) then
+			ply=ent:CPPIGetOwner()
+		else
+			return false
+		end
+		return self:PlayerAllowed(ply)
+	else
+		return true
+	end
+end
+
 function ENT:PlayerAllowed( ply )
-	return (gamemode.Call("PhysgunPickup", ply, self))
+	if CPPI then
+		return self:CPPICanPhysgun(ply)
+	else
+		return true
+	end
 end
 
 function ENT:PlayerEnter( ply, forced )
 	if ply.privacybox and IsValid(ply.privacybox) then
 		ply.oldprivacybox=ply.privacybox
-		ply.privacybox.usecur=CurTime()+1
+		ply.privacybox.plycur=CurTime()+1
 		ply.privacybox:PlayerExit( ply, true )
 	end
 	ply.privacybox=self
@@ -163,7 +211,6 @@ function ENT:PlayerEnter( ply, forced )
 		ply:SetEyeAngles(Angle(ang.p,ang.y,0))
 		ply:SetLocalVelocity(Vector(fwd.x,fwd.y,0)*ply:GetVelocity():Length())
 		ply.oldprivacybox=nil
-		//TODO: Fix it messing around when the exterior is not upright
 	end
 	table.insert(self.occupants,ply)
 end
@@ -209,16 +256,34 @@ hook.Add("PlayerSpawn", "TARDIS_PlayerSpawn", function( ply )
 	end
 end)
 
+hook.Add("CPPIFriendsChanged", "PrivacyBox-CPPIFriendsChanged", function(ply, newfriends)
+	local privacybox=ply.privacybox
+	if IsValid(privacybox) then
+		if privacybox.occupants then
+			for k,v in pairs(privacybox.occupants) do
+				if not privacybox:PlayerAllowed(v) then
+					privacybox:PlayerExit(v)
+					privacybox.plycur=CurTime()+1
+				end
+			end
+		end
+	end
+end)
+
+hook.Add("PhysgunPickup", "PrivacyBox-PhysgunPickup", function(ply,ent)
+	ent.heldby=ply
+end)
+
+hook.Add("PhysgunDrop", "PrivacyBox-PhysgunDrop", function(ply,ent)
+	ent.heldby=ply
+end)
+
 function ENT:Think()
 	if self.occupants then
 		for k,v in pairs(self.occupants) do
 			if not IsValid(v) then
 				self.occupants[k]=nil
 				continue
-			end
-			if not self:PlayerAllowed(v) then
-				self:PlayerExit(v)
-				self.usecur=CurTime()+1
 			end
 		end
 	end

@@ -1,12 +1,12 @@
 if SERVER then
-	hook.Add( "SetupPlayerVisibility", "PrivacyBox-Render", function(ply,viewent)
+	hook.Add( "SetupPlayerVisibility", "PrivacyBox-SetupPlayerVisibility", function(ply,viewent)
 		if IsValid(ply.privacybox) then
 			AddOriginToPVS(ply.privacybox:GetPos())
 		end
 	end)
 elseif CLIENT then
 	local rt,mat
-	local w,h=1024,2048
+	local w,h=512,1024
 	local CamData = {}
 	CamData.x = 0
 	CamData.y = 0
@@ -15,13 +15,13 @@ elseif CLIENT then
 	CamData.w = w
 	CamData.h = h
 	
-	hook.Add("InitPostEntity", "PrivacyBox-Render", function()
+	hook.Add("InitPostEntity", "PrivacyBox-InitPostEntity", function()
 		rt=GetRenderTarget("tardis_rt",w,h,false)
 		mat=Material("models/drmatt/privacybox/portal")
 		mat:SetTexture("$basetexture",rt)
 	end)
 	
-	hook.Add("RenderScene", "PrivacyBox-Render", function()
+	hook.Add("RenderScene", "PrivacyBox-RenderScene", function()
 		if not tobool(GetConVarNumber("privacyboxint_window")) then return end
 		local exterior=LocalPlayer().privacybox
 		if IsValid(exterior) and IsValid(exterior.interior) then
@@ -42,7 +42,7 @@ elseif CLIENT then
 	end)
 	
 	/*
-	hook.Add( "PreDrawHalos", "PrivacyBox-Render", function() // not ideal, but the new scanner sorta forced me to do this
+	hook.Add( "PreDrawHalos", "PrivacyBox-PreDrawHalos", function() // not ideal, but the new scanner sorta forced me to do this
 		if tobool(GetConVarNumber("tardisint_halos"))==false then return end
 		local exterior=LocalPlayer().privacybox
 		if IsValid(exterior) and not LocalPlayer().privacybox_render then
