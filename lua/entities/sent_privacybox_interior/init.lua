@@ -22,6 +22,7 @@ net.Receive("PrivacyBoxInt-Request", function(len,ply)
 end)
 
 function ENT:Initialize()
+	//TODO: Add spawnicon.
 	self:SetModel( "models/drmatt/privacybox/interior.mdl" )
 	// cheers to doctor who team for the model
 	self:PhysicsInit( SOLID_VPHYSICS )
@@ -82,6 +83,7 @@ function ENT:MakePart(class,vec,ang,weld)
 	ent.exterior=self.exterior
 	ent.interior=self
 	ent.owner=self.owner
+	ent.privacybox_part=true
 	ent:SetPos(self:LocalToWorld(vec))
 	ent:SetAngles(ang)
 	ent:Spawn()
@@ -129,7 +131,7 @@ function ENT:MakeVehicle( Pos, Ang, Model, Class, VName, VTable ) // for the cha
 	-- actually uses a different class than is reported by GetClass
 	ent.ClassOverride 	= Class
 	
-	ent.tardis_part=true
+	ent.privacybox_part=true
 	ent:GetPhysicsObject():EnableMotion(false)
 	ent:SetRenderMode(RENDERMODE_TRANSALPHA)
 	ent:SetColor(Color(255,255,255,0))
@@ -162,14 +164,41 @@ function ENT:Use( ply )
 	end
 end
 
+function ENT:InBox(ent)
+	local min=self:LocalToWorld(self:OBBMins())
+	local max=self:LocalToWorld(self:OBBMaxs())
+	local pos = ent:GetPos()
+	if (pos.X>=min.X) and (pos.X<=max.X) and (pos.Y>=min.Y) and (pos.Y<=max.Y) and (pos.Z>=min.Z) and (pos.Z<=max.Z) then
+		return true
+	else
+		return false
+	end
+end
+
 function ENT:Think()
-	//TODO: Check if people are near us (let in if allowed (should fix nesting)|repel if not)
 	if self.exterior and IsValid(self.exterior) then
-		if self.exterior.occupants then
-			for k,v in pairs(self.exterior.occupants) do
-				if self:GetPos():Distance(v:GetPos()) > 700 then
-					self.exterior:PlayerExit(v,true)
-					self.exterior.plycur=CurTime()+1
+		local exterior=self.exterior
+		if exterior.occupants then
+			for k,v in pairs(exterior.occupants) do
+				if self:GetPos():Distance(v:GetPos())>700 then
+					exterior:PlayerExit(v,true)
+					exterior.plycur=CurTime()+1
+				end
+			end
+		end
+		for k,v in pairs(player.GetAll()) do
+			if self:InBox(v) and not v.privacybox then
+				if exterior:PlayerAllowed(v) then
+					local pos=v:GetPos()
+					local eyeang=v:EyeAngles()
+					local vel=v:GetVelocity()
+					exterior:PlayerEnter(v)
+					v:SetPos(pos)
+					v:SetEyeAngles(eyeang)
+					v:SetVelocity(vel)
+				else
+					v:SetPos( v:GetPos() + v:GetVelocity():GetNormal()*-500 )
+					v:SetMoveType( MOVETYPE_WALK )
 				end
 			end
 		end

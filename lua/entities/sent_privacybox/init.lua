@@ -192,6 +192,7 @@ function ENT:PlayerAllowed( ply )
 end
 
 function ENT:PlayerEnter( ply, forced )
+	//TODO: Fix wrong X&Y offset when exiting box inside other box
 	if ply.privacybox and IsValid(ply.privacybox) then
 		ply.oldprivacybox=ply.privacybox
 		ply.privacybox.plycur=CurTime()+1
@@ -216,7 +217,9 @@ function ENT:PlayerEnter( ply, forced )
 end
 
 function ENT:PlayerExit( ply, forced, override )
-	if ply:InVehicle() then ply:ExitVehicle() end
+	if forced or override then
+		if ply:InVehicle() then ply:ExitVehicle() end
+	end
 	net.Start("Player-SetPrivacyBox")
 		net.WriteEntity(ply)
 		net.WriteEntity(NULL)
@@ -231,17 +234,24 @@ function ENT:PlayerExit( ply, forced, override )
 		ply:SetEyeAngles(Angle(ang.p,ang.y,0))
 		ply:SetLocalVelocity(Vector(fwd.x,fwd.y,0)*ply:GetVelocity():Length())
 	end
-	if self.occupants then
-		for k,v in pairs(self.occupants) do
-			if v==ply then
-				if override then
-					self.occupants[k]=nil
-				else
-					table.remove(self.occupants,k)
-				end
+	for k,v in pairs(self.occupants) do
+		if v==ply then
+			if override then
+				self.occupants[k]=nil
+			else
+				table.remove(self.occupants,k)
 			end
 		end
 	end
+end
+
+function ENT:PlayerIn(ply)
+	for k,v in pairs(self.occupants) do
+		if ply==v then
+			return true
+		end
+	end
+	return false
 end
 
 hook.Add("PlayerSpawn", "TARDIS_PlayerSpawn", function( ply )
@@ -278,13 +288,29 @@ hook.Add("PhysgunDrop", "PrivacyBox-PhysgunDrop", function(ply,ent)
 	ent.heldby=ply
 end)
 
+hook.Add("EV_Goto", "PrivacyBox-EV_Goto", function(ply,pl,pos)
+	if IsValid(pl.privacybox) then
+		if not pl.privacybox:PlayerAllowed(ply) then
+			return false
+		end
+	end
+end)
+
+hook.Add("EV_Bring", "PrivacyBox-EV_Bring", function(ply,pl,pos)
+	if IsValid(ply.privacybox) then
+		if not ply.privacybox:PlayerAllowed(pl) then
+			return false
+		end
+	elseif IsValid(pl.privacybox) then
+		pl.privacybox:PlayerExit(pl)
+	end
+end)
+
 function ENT:Think()
-	if self.occupants then
-		for k,v in pairs(self.occupants) do
-			if not IsValid(v) then
-				self.occupants[k]=nil
-				continue
-			end
+	for k,v in pairs(self.occupants) do
+		if not IsValid(v) then
+			self.occupants[k]=nil
+			continue
 		end
 	end
 	
