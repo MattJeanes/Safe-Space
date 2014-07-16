@@ -39,6 +39,42 @@ function ENT:Initialize()
 	self.usecur=0
 	
 	self:SpawnParts()
+	
+	self.portals={}
+	for i=1,2 do
+		self.portals[i]=ents.Create("linked_portal_door")
+		self.portals[i]:SetWidth(90)
+		self.portals[i]:SetHeight(180)
+		self.portals[i]:SetDisappearDist(200)
+		self.portals[i].interior=self
+		self.portals[i].exterior=self.exterior
+	end
+	self.portals[1]:SetPos(self.exterior:LocalToWorld(Vector(0,0,90)))
+	self.portals[2]:SetPos(self:LocalToWorld(Vector(420, 0, 105)))
+	self.portals[1]:SetAngles(self.exterior:GetAngles())
+	self.portals[2]:SetAngles(self:LocalToWorldAngles(Angle(0,180,0)))
+	self.portals[1]:SetExit(self.portals[2])
+	self.portals[2]:SetExit(self.portals[1])
+	self.portals[1]:SetParent(self.exterior)
+	self.portals[2]:SetParent(self)
+	self.portals[1].StartTouch = function(self,ent)
+		if ent:IsPlayer() then
+			self.exterior:PlayerEnter(ent)
+		else
+			self.exterior:PropEnter(ent)
+		end
+	end
+	self.portals[2].StartTouch = function(self,ent)
+		if ent:IsPlayer() then
+			self.exterior:PlayerExit(ent)
+		else
+			self.exterior:PropExit(ent)
+		end
+	end
+	for i=1,2 do
+		self.portals[i]:Spawn()
+		self.portals[i]:Activate()
+	end
 end
 
 function ENT:UpdateTransmitState()

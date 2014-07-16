@@ -50,6 +50,7 @@ function ENT:Initialize()
 	end
 	
 	self.plycur=0	
+	self.playercur=0	
 	self.propcur=0	
 	self.occupants={}
 	
@@ -78,20 +79,6 @@ function ENT:Initialize()
 	self.interior:Activate()
 	if IsValid(self.owner) and CPPI then
 		self.interior:CPPISetOwner(self.owner)
-	end
-	
-	self.portal=ents.Create("sent_privacybox_portal")
-	self.portal:SetPos(self:GetPos())
-	self.portal:SetAngles(self:GetAngles())
-	self.portal.exterior=self
-	self.portal.interior=self.interior
-	self.portal.owner=self.owner
-	self.portal:SetMode(false)
-	self.portal:SetParent(self)
-	self.portal:Spawn()
-	self.portal:Activate()
-	if IsValid(self.owner) and CPPI then
-		self.portal:CPPISetOwner(self.owner)
 	end
 end
 
@@ -130,6 +117,8 @@ end
 
 function ENT:PropEnter( ent )
 	if ent==self or ent.privacybox_part then return end
+	if not self:PropAllowed(ent) then return end
+	if not (CurTime() > self.propcur) then return end
 	if self.interior and IsValid(self.interior) and IsValid(self.interior.door) then
 		local phys=ent:GetPhysicsObject()
 		local fwd,vel
@@ -145,11 +134,14 @@ function ENT:PropEnter( ent )
 		if IsValid(phys) then
 			phys:SetVelocityInstantaneous(Vector(fwd.x,fwd.y,0)*vel:Length())
 		end
+		--self.propcur=CurTime()+1
 	end
 end
 
 function ENT:PropExit( ent )
 	if ent==self or ent.privacybox_part then return end
+	if not self:PropAllowed(ent) then return end
+	if not (CurTime() > self.propcur) then return end
 	if self.interior and IsValid(self.interior) and IsValid(self.interior.door) then
 		local phys=ent:GetPhysicsObject()
 		local fwd,vel
@@ -164,6 +156,7 @@ function ENT:PropExit( ent )
 		if IsValid(phys) then
 			phys:SetVelocityInstantaneous(Vector(fwd.x,fwd.y,0)*vel:Length())
 		end
+		self.propcur=CurTime()+1
 	end
 end
 
@@ -192,6 +185,8 @@ function ENT:PlayerAllowed( ply )
 end
 
 function ENT:PlayerEnter( ply, forced )
+	if not self:PlayerAllowed(ent) then return end
+	if not (CurTime() > self.playercur) then return end
 	//TODO: Fix wrong X&Y offset when exiting box inside other box
 	if ply.privacybox and IsValid(ply.privacybox) then
 		ply.oldprivacybox=ply.privacybox
@@ -214,9 +209,12 @@ function ENT:PlayerEnter( ply, forced )
 		ply.oldprivacybox=nil
 	end
 	table.insert(self.occupants,ply)
+	self.playercur=CurTime()+1
 end
 
 function ENT:PlayerExit( ply, forced, override )
+	if not self:PlayerAllowed(ent) then return end
+	if not (CurTime() > self.playercur) then return end
 	if forced or override then
 		if ply:InVehicle() then ply:ExitVehicle() end
 	end
@@ -243,6 +241,7 @@ function ENT:PlayerExit( ply, forced, override )
 			end
 		end
 	end
+	self.playercur=CurTime()+1
 end
 
 function ENT:PlayerIn(ply)

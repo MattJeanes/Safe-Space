@@ -14,18 +14,4 @@ function ENT:Initialize()
 	if (self.phys:IsValid()) then
 		self.phys:EnableMotion(false)
 	end
-	
-	self.portal=ents.Create("sent_privacybox_portal")
-	self.portal:SetPos(self:GetPos())
-	self.portal:SetAngles(self:GetAngles())
-	self.portal.exterior=self.exterior
-	self.portal.interior=self.interior
-	self.portal.owner=self.owner
-	self.portal:SetMode(true)
-	self.portal:SetParent(self)
-	self.portal:Spawn()
-	self.portal:Activate()
-	if IsValid(self.owner) and CPPI then
-		self.portal:CPPISetOwner(self.owner)
-	end
 end

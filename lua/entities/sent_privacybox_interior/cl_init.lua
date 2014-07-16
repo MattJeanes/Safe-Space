@@ -6,7 +6,7 @@ include('shared.lua')
    Remember, the things you render first will be underneath!
 ---------------------------------------------------------]]
 function ENT:Draw()
-	if self.exterior==LocalPlayer().privacybox and not LocalPlayer().privacybox_render then
+	if (self.exterior==LocalPlayer().privacybox and not LocalPlayer().privacybox_render) or worldportals and worldportals.drawing then
 		//render.SuppressEngineLighting(true)
 		//render.ComputeDynamicLighting(self:LocalToWorld(Vector(0,0,100)), Vector(0,0,0))
 		self:DrawModel()
