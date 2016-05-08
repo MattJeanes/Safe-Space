@@ -1,9 +1,14 @@
-PrivacyBox
-===============
-
+Safe Space
+=
 A bigger-on-the-inside space that can be used for private building.
 
+Requirements
+=
+This addon requires the following:
+- [Doors](https://github.com/MattJeanes/Doors)
+
+Without these the addon will not function correctly and you may experience errors.
+
 Installation
-===============
-1. Put this entire folder into Steam/Steamapps/USERNAME/garrysmod/garrysmod/addons/
-2. Done, enjoy.
+=
+Remove any previous versions then put this folder into Steam/Steamapps/common/garrysmod/garrysmod/addons/.

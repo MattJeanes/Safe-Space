@@ -1,11 +1,11 @@
--- PrivacyBox
+-- Safe Space
 
-PrivacyBox=PrivacyBox or {}
-function PrivacyBox:LoadFolder(folder,addonly,noprefix)
+SafeSpace=SafeSpace or {}
+function SafeSpace:LoadFolder(folder,addonly,noprefix)
 	if folder then
-		folder="privacybox/"..folder.."/"
+		folder="safespace/"..folder.."/"
 	else
-		folder="privacybox/"
+		folder="safespace/"
 	end
 	local modules = file.Find(folder.."*.lua","LUA")
 	for _, plugin in ipairs(modules) do
@@ -33,6 +33,6 @@ function PrivacyBox:LoadFolder(folder,addonly,noprefix)
 		end
 	end
 end
-PrivacyBox:LoadFolder("libraries/libraries")
-PrivacyBox:LoadFolder("libraries")
-PrivacyBox:LoadFolder()
+SafeSpace:LoadFolder("libraries/libraries")
+SafeSpace:LoadFolder("libraries")
+SafeSpace:LoadFolder()

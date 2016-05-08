@@ -1,7 +1,7 @@
 -- Test
 
 ENT:AddHook("Initialize","test",function(self)
-	PrivacyBox:MakeDoor(self)
+	SafeSpace:MakeDoor(self)
 end)
 
 function ENT:GetDimensions()

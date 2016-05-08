@@ -1,6 +1,6 @@
 -- Dynamic
 
-function PrivacyBox:MakeCube(pos,ang,length,width,height,texscale)
+function SafeSpace:MakeCube(pos,ang,length,width,height,texscale)
 	pos=pos or Vector()
 	length=length or 1
 	width=width or 1
@@ -156,7 +156,7 @@ local rendermat=Material("sprops/sprops_grid_12x12")
 local wireframe=Material("models/wireframe")
 local scale=Vector(1,1,1)
 
-function PrivacyBox:Init(ent)
+function SafeSpace:Init(ent)
 	if CLIENT then
 		local vertices={}
 		for _,section in pairs(ent.sections) do
@@ -232,7 +232,7 @@ function PrivacyBox:Init(ent)
 	end
 end
 
-function PrivacyBox:MakeDoor(ent)
+function SafeSpace:MakeDoor(ent)
 	ent:SetRenderMode(RENDERMODE_TRANSALPHA)
 	ent:SetColor(Color(255,255,255,255))
 	
@@ -251,7 +251,7 @@ function PrivacyBox:MakeDoor(ent)
 	self:Init(ent)
 end
 
-function PrivacyBox:MakeInterior(ent,width,height,length,size)
+function SafeSpace:MakeInterior(ent,width,height,length,size)
 	ent:SetRenderMode(RENDERMODE_TRANSALPHA)
 	ent:SetColor(Color(255,255,255,255))
 	

@@ -1,17 +1,12 @@
--- PrivacyBox
+-- Safe Space Interior
 
-ENT.Base="gmod_door_exterior"
-ENT.Spawnable=true
-ENT.PrintName="PrivacyBox"
+ENT.Base="gmod_door_interior"
 ENT.Author="Dr. Matt"
-ENT.Interior="gmod_privacybox_interior"
+ENT.Exterior="gmod_safespace"
 ENT.Model="models/props_junk/PopCan01a.mdl"
-ENT.Fallback={
-	pos=Vector(20,0,0)
-}
 
 local class=string.sub(ENT.Folder,string.find(ENT.Folder, "/[^/]*$")+1) -- only works if in a folder
-	
+
 local hooks={}
 
 -- Hook system for modules
