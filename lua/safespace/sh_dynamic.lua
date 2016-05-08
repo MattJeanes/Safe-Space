@@ -152,6 +152,77 @@ function SafeSpace:MakeCube(pos,ang,length,width,height,texscale)
 	return verts,vertices
 end
 
+function SafeSpace:GetExteriorDimensions()
+	return {
+		width = 50,
+		height = 100,
+		size = 10,
+		texscale = 20
+	}
+end
+
+function SafeSpace:GetExteriorPortalDimensions()
+	local dim=SafeSpace:GetExteriorDimensions()
+	return {
+		pos = Vector(0,0,dim.height/2),
+		ang = Angle(0,0,0),
+		width = dim.width-dim.size,
+		height = dim.height
+	}
+end
+
+function SafeSpace:GetInteriorDimensions()
+	return {
+		width = 200,
+		height = 150,
+		length = 200,
+		size = 10
+	}
+end
+
+function SafeSpace:GetInteriorPortalDimensions()
+	local dim=self:GetInteriorDimensions()
+	local edim=self:GetExteriorDimensions()
+	return {
+		pos = Vector(-((dim.width/2)-dim.size)+5-(edim.size/2),0,(-dim.height/2)+(edim.height/2)-(dim.size/2)),
+		ang = Angle(0,0,0),
+		width = edim.width-edim.size,
+		height = edim.height
+	}
+end
+
+function SafeSpace:GetExteriorLighting(ent)
+	local dim=SafeSpace:GetExteriorDimensions()
+	local idim=SafeSpace:GetInteriorDimensions()
+	local portal=SafeSpace:GetExteriorPortalDimensions()
+	return {
+		{
+			color=Vector(1,1,1),
+			pos=ent:LocalToWorld(Vector(-idim.width/2,0,((idim.height+idim.size)/2)+(((idim.height-idim.size)/2)*0.5))),
+		},
+		{
+			color=Vector(1,1,1)*0.5,
+			pos=ent:LocalToWorld(portal.pos+Vector(dim.size*5,0,0)),
+		}
+	}
+end
+
+function SafeSpace:GetInteriorLighting(ent)
+	local dim=SafeSpace:GetInteriorDimensions()
+	local edim=SafeSpace:GetExteriorDimensions()
+	local portal=SafeSpace:GetInteriorPortalDimensions()
+	return {
+		{
+			color=Vector(1,1,1),
+			pos=ent:LocalToWorld(Vector(0,0,((dim.height-dim.size)/2)*0.5))
+		},
+		{
+			color=Vector(1,1,1)*0.5,
+			pos=ent:LocalToWorld(portal.pos+Vector(-edim.size*5,0,0))
+		}
+	}
+end
+
 local rendermat=Material("sprops/sprops_grid_12x12")
 local wireframe=Material("models/wireframe")
 local scale=Vector(1,1,1)
@@ -186,23 +257,27 @@ function SafeSpace:Init(ent)
 	
 	if CLIENT then
 		-- https://facepunch.com/showthread.php?t=1459677
-		ent:AddHook("Think","phys",function(self)
-			if IsValid(self.phys) then
-				self.phys:EnableMotion(false)
-				self.phys:SetPos(self:GetPos())
-				self.phys:SetAngles(self:GetAngles())
-			end
-		end)
+		if ent.AddHook then
+			ent:AddHook("Think","phys",function(self)
+				if IsValid(self.phys) then
+					self.phys:EnableMotion(false)
+					self.phys:SetPos(self:GetPos())
+					self.phys:SetAngles(self:GetAngles())
+				end
+			end)
+		end
 		
-		ent.CustomDrawModel = function(self)
+		ent.CustomDrawModel = function(self,editor)
 			if self.mesh then
-				mat = Matrix()
+				local mat = Matrix()
 				mat:Translate(self:GetPos())
 				mat:Rotate(self:GetAngles())
 				mat:Scale(scale)
 				-- fixes it going black sometimes
-				render.ResetModelLighting(0,0,0)
-				render.SetLocalModelLights(self:GetLighting())
+				if not editor then
+					render.ResetModelLighting(0,0,0)
+					render.SetLocalModelLights(self:GetLighting())
+				end
 				render.SetMaterial(rendermat)
 				cam.PushModelMatrix(mat)
 					self.mesh:Draw()
@@ -251,26 +326,29 @@ function SafeSpace:MakeDoor(ent)
 	self:Init(ent)
 end
 
-function SafeSpace:MakeInterior(ent,width,height,length,size)
+function SafeSpace:MakeInterior(ent)
 	ent:SetRenderMode(RENDERMODE_TRANSALPHA)
 	ent:SetColor(Color(255,255,255,255))
 	
-	local texscale = 0.1
 	local edim=ent.exterior:GetDimensions()
 	local dim=ent:GetDimensions()
-	ent:SetPos(ent:GetPos()+Vector(0,0,-dim.height))
+	local offset=Vector(dim.width/2,dim.length/2,(dim.height-dim.size)/2)
+	if not ent.origpos then
+		ent.origpos=ent:GetPos()
+	end
+	ent:SetPos(ent.origpos+Vector(0,0,-dim.height))
 	ent.sections={
-		{self:MakeCube(Vector(-dim.width/2,-dim.length/2,(-dim.size/2)-dim.height),Angle(0,0,0),dim.width,dim.length,dim.size,edim.texscale)}, -- floor
-		{self:MakeCube(Vector(-dim.width/2,-dim.length/2,(dim.height-dim.size/2)-dim.height),Angle(0,0,0),dim.width,dim.length,dim.size,edim.texscale)}, -- ceiling
-		{self:MakeCube(Vector(-dim.width/2,-dim.length+(dim.size/2),(dim.height/2-(dim.size/2))-dim.height),Angle(0,0,0),dim.width,dim.size,dim.height-dim.size,edim.texscale)}, -- right wall
-		{self:MakeCube(Vector(-dim.width/2,-(dim.size/2),(dim.height/2-(dim.size/2))-dim.height),Angle(0,0,0),dim.width,dim.size,dim.height-dim.size,edim.texscale)}, -- left wall
-		{self:MakeCube(Vector(-dim.size/2,(-dim.length/2),(dim.height/2-(dim.size/2))-dim.height),Angle(0,0,0),dim.size,dim.length-(dim.size*2),dim.height-dim.size,edim.texscale)}, -- front wall
-		{self:MakeCube(Vector(-dim.width+(dim.size/2),(-dim.length/2),(dim.height/2-(dim.size/2))-(dim.height-(edim.height/2))),Angle(0,0,0),dim.size,dim.length-(dim.size*2),dim.height-dim.size-edim.height,edim.texscale)}, -- back wall top
-		{self:MakeCube(Vector(-dim.width+(dim.size/2),(-dim.length/4)+(edim.width/4)-(edim.size/4)-(dim.size/2),((edim.height/2))-dim.height),Angle(0,0,0),dim.size,((dim.length-(edim.size*4))/2)-(edim.width/2)+(edim.size*2)+(edim.size/2)-(dim.size),edim.height,edim.texscale)}, -- back right wall
-		{self:MakeCube(Vector(-dim.width+(dim.size/2),(-dim.length+dim.size)+((((dim.length-(dim.size*4))/2)-(edim.width/2)+(edim.size/2))/2)+(dim.size/2),((edim.height/2))-dim.height),Angle(0,0,0),dim.size,((dim.length-(edim.size*4))/2)-(dim.size)-(edim.width/2)+(edim.size*2)+(edim.size/2),edim.height,edim.texscale)}, -- back left wall
+		{self:MakeCube(Vector(-dim.width/2,-dim.length/2,(-dim.size/2)-dim.height)+offset,Angle(0,0,0),dim.width,dim.length,dim.size,edim.texscale)}, -- floor
+		{self:MakeCube(Vector(-dim.width/2,-dim.length/2,(dim.height-dim.size/2)-dim.height)+offset,Angle(0,0,0),dim.width,dim.length,dim.size,edim.texscale)}, -- ceiling
+		{self:MakeCube(Vector(-dim.width/2,-dim.length+(dim.size/2),(dim.height/2-(dim.size/2))-dim.height)+offset,Angle(0,0,0),dim.width,dim.size,dim.height-dim.size,edim.texscale)}, -- right wall
+		{self:MakeCube(Vector(-dim.width/2,-(dim.size/2),(dim.height/2-(dim.size/2))-dim.height)+offset,Angle(0,0,0),dim.width,dim.size,dim.height-dim.size,edim.texscale)}, -- left wall
+		{self:MakeCube(Vector(-dim.size/2,(-dim.length/2),(dim.height/2-(dim.size/2))-dim.height)+offset,Angle(0,0,0),dim.size,dim.length-(dim.size*2),dim.height-dim.size,edim.texscale)}, -- front wall
+		{self:MakeCube(Vector(-dim.width+(dim.size/2),(-dim.length/2),(dim.height/2-(dim.size/2))-(dim.height-(edim.height/2)))+offset,Angle(0,0,0),dim.size,dim.length-(dim.size*2),dim.height-dim.size-edim.height,edim.texscale)}, -- back wall top
+		{self:MakeCube(Vector(-dim.width+(dim.size/2),(-dim.length/4)+(edim.width/4)-(edim.size/4)-(dim.size/2),((edim.height/2))-dim.height)+offset,Angle(0,0,0),dim.size,((dim.length-(edim.size*4))/2)-(edim.width/2)+(edim.size*2)+(edim.size/2)-(dim.size),edim.height,edim.texscale)}, -- back right wall
+		{self:MakeCube(Vector(-dim.width+(dim.size/2),(-dim.length+dim.size)+((((dim.length-(dim.size*4))/2)-(edim.width/2)+(edim.size/2))/2)+(dim.size/2),((edim.height/2))-dim.height)+offset,Angle(0,0,0),dim.size,((dim.length-(edim.size*4))/2)-(dim.size)-(edim.width/2)+(edim.size*2)+(edim.size/2),edim.height,edim.texscale)}, -- back left wall
 	}
 	
-	local mins,maxs=Vector(-dim.width,-dim.length,-dim.height-dim.size),Vector(0,0,0)
+	local mins,maxs=Vector(-dim.width/2,-dim.length/2,((-dim.height-dim.size)/2)-dim.size),Vector(dim.width/2,dim.length/2,(dim.height-dim.size)/2)
 	if SERVER then
 		local allowance=Vector(1,1,1)*100 -- let people go a bit out of the box
 		ent.mins,ent.maxs=ent:LocalToWorld(mins-allowance),ent:LocalToWorld(maxs+allowance)
