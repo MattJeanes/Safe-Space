@@ -1,5 +1,6 @@
 -- Safe Space
 
+ENT.Category = "Dr. Matt"
 ENT.Base="gmod_door_exterior"
 ENT.Spawnable=true
 ENT.PrintName="Safe Space"

@@ -152,17 +152,17 @@ function SafeSpace:MakeCube(pos,ang,length,width,height,texscale)
 	return verts,vertices
 end
 
-function SafeSpace:GetExteriorDimensions()
+function SafeSpace:GetExteriorDimensions(ply)
 	return {
-		width = 50,
-		height = 100,
-		size = 10,
-		texscale = 20
+		width = SafeSpace:GetOption("exterior","width",ply).value,
+		height = SafeSpace:GetOption("exterior","height",ply).value,
+		size = SafeSpace:GetOption("global","size",ply).value,
+		texscale = SafeSpace:GetOption("global","texscale",ply).value
 	}
 end
 
-function SafeSpace:GetExteriorPortalDimensions()
-	local dim=SafeSpace:GetExteriorDimensions()
+function SafeSpace:GetExteriorPortalDimensions(ent)
+	local dim=ent:GetDimensions()
 	return {
 		pos = Vector(0,0,dim.height/2),
 		ang = Angle(0,0,0),
@@ -171,18 +171,18 @@ function SafeSpace:GetExteriorPortalDimensions()
 	}
 end
 
-function SafeSpace:GetInteriorDimensions()
+function SafeSpace:GetInteriorDimensions(ply)
 	return {
-		width = 200,
-		height = 150,
-		length = 200,
-		size = 10
+		width = SafeSpace:GetOption("interior","width",ply).value,
+		height = SafeSpace:GetOption("interior","height",ply).value,
+		length = SafeSpace:GetOption("interior","length",ply).value,
+		size = SafeSpace:GetOption("global","size",ply).value
 	}
 end
 
-function SafeSpace:GetInteriorPortalDimensions()
-	local dim=self:GetInteriorDimensions()
-	local edim=self:GetExteriorDimensions()
+function SafeSpace:GetInteriorPortalDimensions(ent)
+	local dim=ent:GetDimensions()
+	local edim=ent.exterior:GetDimensions()
 	return {
 		pos = Vector(-((dim.width/2)-dim.size)+5-(edim.size/2),0,(-dim.height/2)+(edim.height/2)-(dim.size/2)),
 		ang = Angle(0,0,0),
@@ -192,9 +192,9 @@ function SafeSpace:GetInteriorPortalDimensions()
 end
 
 function SafeSpace:GetExteriorLighting(ent)
-	local dim=SafeSpace:GetExteriorDimensions()
-	local idim=SafeSpace:GetInteriorDimensions()
-	local portal=SafeSpace:GetExteriorPortalDimensions()
+	local dim=ent:GetDimensions()
+	local idim=ent.interior:GetDimensions()
+	local portal=ent:GetPortalDimensions()
 	return {
 		{
 			color=Vector(1,1,1),
@@ -208,9 +208,9 @@ function SafeSpace:GetExteriorLighting(ent)
 end
 
 function SafeSpace:GetInteriorLighting(ent)
-	local dim=SafeSpace:GetInteriorDimensions()
-	local edim=SafeSpace:GetExteriorDimensions()
-	local portal=SafeSpace:GetInteriorPortalDimensions()
+	local dim=ent:GetDimensions()
+	local edim=ent.exterior:GetDimensions()
+	local portal=ent:GetPortalDimensions()
 	return {
 		{
 			color=Vector(1,1,1),
@@ -356,7 +356,7 @@ function SafeSpace:MakeInterior(ent)
 	else
 		ent:SetRenderBounds(mins,maxs)
 	end
-	ent.Fallback={pos=Vector(-dim.width+(dim.size/2)+10,-dim.length/2,-dim.height+5)}
+	ent.Fallback={pos=Vector((-dim.width/2)+dim.size,0,((-dim.height-dim.size)/2))}
 	
 	self:Init(ent)
 end

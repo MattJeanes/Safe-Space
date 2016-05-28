@@ -5,11 +5,11 @@ ENT:AddHook("Initialize","test",function(self)
 end)
 
 function ENT:GetDimensions()
-	return SafeSpace:GetExteriorDimensions()
+	return self.dimensions
 end
 
 function ENT:GetPortalDimensions()
-	return SafeSpace:GetExteriorPortalDimensions()
+	return SafeSpace:GetExteriorPortalDimensions(self)
 end
 
 function ENT:GetLighting()

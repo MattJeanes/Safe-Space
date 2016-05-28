@@ -5,7 +5,7 @@ hook.Add("PopulateToolMenu", "SafeSpace-PopulateToolMenu", function()
 		panel:ClearControls()
 		
 		local DLabel = vgui.Create( "DLabel" )
-		DLabel:SetText("The Safe Space Settings is available at any time using the button below:")
+		DLabel:SetText("The Safe Space Settings are available at any time using the button below:")
 		panel:AddItem(DLabel)
 		
 		local button = vgui.Create("DButton")
