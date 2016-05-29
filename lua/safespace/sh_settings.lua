@@ -121,6 +121,8 @@ function SafeSpace:GetOptionConVarName(category,option)
 end
 
 if CLIENT then
+	CreateClientConVar("safespace_texture_exterior","sprops/sprops_grid_12x12",true,true)
+	CreateClientConVar("safespace_texture_interior","sprops/sprops_grid_12x12",true,true)
 	for _,cat in ipairs(options) do
 		for _,opt in ipairs(cat) do
 			opt.convar = CreateClientConVar(SafeSpace:GetOptionConVarName(cat.id,opt.id), opt.default, true, true)
@@ -189,7 +191,7 @@ function SafeSpace:OpenSettings()
 		ent:SetAngles( self.Angles )
 	end
 	exterior.PreDrawModel = function(exterior,ent)
-		ent:CustomDrawModel(true)
+		ent:CustomDrawModel(true,1)
 		return false
 	end
 	
@@ -238,7 +240,7 @@ function SafeSpace:OpenSettings()
 		ent:SetAngles( self.Angles )
 	end
 	interior.PreDrawModel = function(interior,ent)
-		ent:CustomDrawModel(true)
+		ent:CustomDrawModel(true,2)
 		return false
 	end
 	
