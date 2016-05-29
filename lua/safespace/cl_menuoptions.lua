@@ -14,5 +14,21 @@ hook.Add("PopulateToolMenu", "SafeSpace-PopulateToolMenu", function()
 			SafeSpace:OpenSettings()
 		end
 		panel:AddItem(button)
+		
+		local matselectex = panel:MatSelect( "safespace_texture_exterior", list.Get( "OverrideMaterials" ), true, 64, 64 )
+		local mat_ex = vgui.Create("DCollapsibleCategory")
+		panel:AddItem(mat_ex)
+		mat_ex:SetLabel("Exterior Material")
+		mat_ex:SetExpanded(0)
+		mat_ex:SetContents(matselectex)
+
+		local matselectint = panel:MatSelect( "safespace_texture_interior", list.Get( "OverrideMaterials" ), true, 64, 64 )
+		local mat_in = vgui.Create("DCollapsibleCategory")
+		panel:AddItem(mat_in)
+		mat_in:SetLabel("Interior Material")
+		mat_in:SetExpanded(1)
+		mat_in:SetContents(matselectint)
+	
+
 	end)
 end)

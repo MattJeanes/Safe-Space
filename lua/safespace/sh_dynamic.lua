@@ -223,8 +223,16 @@ function SafeSpace:GetInteriorLighting(ent)
 	}
 end
 
-local rendermat=Material("sprops/sprops_grid_12x12")
+function SafeSpace:GetTextureExterior(ply)
+	return ply:GetInfo("safespace_texture_exterior")
+end
+
+function SafeSpace:GetTextureInterior(ply)
+	return ply:GetInfo("safespace_texture_interior")
+end
+
 local wireframe=Material("models/wireframe")
+
 local scale=Vector(1,1,1)
 
 function SafeSpace:Init(ent)
@@ -267,7 +275,7 @@ function SafeSpace:Init(ent)
 			end)
 		end
 		
-		ent.CustomDrawModel = function(self,editor)
+		ent.CustomDrawModel = function(self,editor,mode)
 			if self.mesh then
 				local mat = Matrix()
 				mat:Translate(self:GetPos())
@@ -276,9 +284,16 @@ function SafeSpace:Init(ent)
 				-- fixes it going black sometimes
 				if not editor then
 					render.ResetModelLighting(0,0,0)
-					render.SetLocalModelLights(self:GetLighting())
+					render.SetLocalModelLights(self:GetLighting())					
+					--bit of explanation for this; as it may seem weird. Without this little workaround; only the exterior texture will set.
+					--also NW2Vars were found to be unreliable for this
+					render.SetMaterial(Material(self:GetNWString("safespace_texture_exterior",self:GetNWString("safespace_texture_interior","sprops/sprops_grid_12x12"))))
+				elseif mode == 1 then
+						render.SetMaterial(Material(GetConVar("safespace_texture_exterior"):GetString()))
+				elseif mode == 2 then
+						render.SetMaterial(Material(GetConVar("safespace_texture_interior"):GetString()))
 				end
-				render.SetMaterial(rendermat)
+
 				cam.PushModelMatrix(mat)
 					self.mesh:Draw()
 				cam.PopModelMatrix()
