@@ -152,7 +152,6 @@ function SafeSpace:MakeCube(pos,ang,length,width,height,texscale)
 	return verts,vertices
 end
 
-
 local custom_surfacetypes = {}
 local valid_surfacetypes = {} --a confirmation global list to make sure the client doesn't load in surface types not on the list
 function SafeSpace:AddCustomSurface(displayname, surfaceid, category, icon, categoryicon)
@@ -345,7 +344,7 @@ function SafeSpace:Init(ent)
 	end	
 	
 	ent.phys:SetMass(50000)
-	ent.phys:SetMaterial(ent:GetNWString("safespace_surface","metal"))
+	ent.phys:SetMaterial(ent.surfacetype or "metal")
 	ent.phys:EnableMotion(false)
 	
 	if CLIENT then
@@ -370,9 +369,7 @@ function SafeSpace:Init(ent)
 				if not editor then
 					render.ResetModelLighting(0,0,0)
 					render.SetLocalModelLights(self:GetLighting())					
-					--bit of explanation for this; as it may seem weird. Without this little workaround; only the exterior texture will set.
-					--also NW2Vars were found to be unreliable for this
-					render.SetMaterial(Material(self:GetNWString("safespace_texture_exterior",self:GetNWString("safespace_texture_interior","sprops/sprops_grid_12x12"))))
+					render.SetMaterial(Material(self.material))
 				elseif mode == 1 then
 						render.SetMaterial(Material(GetConVar("safespace_texture_exterior"):GetString()))
 				elseif mode == 2 then
