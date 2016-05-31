@@ -131,224 +131,16 @@ if CLIENT then
 	end
 end
 
-function SafeSpace:OpenSettings()
-	SafeSpace:ResetOptionChanges()
-
-	local frame=vgui.Create("DFrame")
-	frame:SetSize(ScrW()*0.5,ScrH()*0.5)
-	frame:SetTitle("Safe Space Settings")
-	frame:SetDraggable(true)
-	frame:Center()
-	
-	local panel=vgui.Create("DPanel",frame)
-	panel:SetSize(frame:GetWide()-4,frame:GetTall()-27)
-	panel:SetPos(2,25)
-	
-	local margin=15
-	
-	local modelpanel=vgui.Create("DPanel",panel)
-	modelpanel:SetSize(panel:GetWide()/2,panel:GetTall())
-	modelpanel:SetBackgroundColor(Color(50,50,50))
-	
-	local exterior=vgui.Create("DModelPanel",modelpanel)
-	exterior:SetSize(modelpanel:GetWide()-margin,modelpanel:GetTall()-margin)
-	exterior:SetPos(margin,0)
-	exterior:SetModel("models/props_junk/PopCan01a.mdl")
-	exterior.FarZ = 16000
-	exterior.Entity.GetDimensions = function(ent)
-		return {
-			width = SafeSpace:GetOption("exterior","width").tempvalue,
-			height = SafeSpace:GetOption("exterior","height").tempvalue,
-			size = SafeSpace:GetOption("global","size").tempvalue,
-			texscale = SafeSpace:GetOption("global","texscale").tempvalue
-		}
+function SafeSpace:UpdateGhost()
+	if IsValid(SafeSpace.GhostExterior) and IsValid(SafeSpace.GhostInterior) then
+		SafeSpace.GhostExterior:UpdateModel()
+		SafeSpace.GhostInterior:UpdateModel()
 	end
-	exterior.Entity.GetLighting = function(ent)
-		return SafeSpace:GetExteriorLighting(ent)
-	end
-	exterior.UpdateModel = function(exterior,int)
-		SafeSpace:MakeDoor(exterior.Entity)
-		local dim=exterior.Entity:GetDimensions()
-		local big=math.Max(dim.width,dim.height)
-		exterior:SetLookAt(Vector(dim.size/4,(dim.width+dim.size)/4,(dim.height+dim.size)/2))
-		exterior:SetCamPos(Vector(0,big*1.5,(dim.height+dim.size)/2))
-	end
-	exterior:UpdateModel()
-	exterior.Angles = Angle(0,90,0)
-	exterior.DragMousePress = function(self)
-		self.PressX, self.PressY = gui.MousePos()
-		self.Pressed = true
-	end
-	exterior.DragMouseRelease = function(self)
-		self.Pressed = false
-	end
-	exterior.LayoutEntity = function(self, ent)
-		if self.Pressed then
-			local mx, my = gui.MousePos()
-			self.Angles = self.Angles - Angle( 0, ( self.PressX or mx ) - mx, 0 )
-			
-			self.PressX, self.PressY = gui.MousePos()
-		end
-		ent:SetAngles( self.Angles )
-	end
-	exterior.PreDrawModel = function(exterior,ent)
-		ent:CustomDrawModel(true,1)
-		return false
-	end
-	
-	local interior=vgui.Create("DModelPanel",modelpanel)
-	interior:SetVisible(false)
-	interior:SetSize(modelpanel:GetWide()-margin,modelpanel:GetTall()-margin)
-	interior:SetPos(margin,0)
-	interior:SetModel("models/props_junk/PopCan01a.mdl")
-	interior.FarZ = 16000
-	interior.Entity.GetDimensions = function(ent)
-		return {
-			width = SafeSpace:GetOption("interior","width").tempvalue,
-			height = SafeSpace:GetOption("interior","height").tempvalue,
-			length = SafeSpace:GetOption("interior","length").tempvalue,
-			size = SafeSpace:GetOption("global","size").tempvalue
-		}
-	end
-	interior.Entity.GetLighting = function(ent)
-		return SafeSpace:GetInteriorLighting(ent)
-	end
-	interior.Entity.exterior = exterior.Entity
-	exterior.Entity.interior = interior.Entity
-	interior.UpdateModel = function(interior,int)
-		SafeSpace:MakeInterior(interior.Entity)
-		local dim=interior.Entity:GetDimensions()
-		local big=math.Max(dim.width,dim.height,dim.length)
-		interior:SetLookAt(Vector(0,0,-dim.height-dim.size))
-		interior:SetCamPos(Vector(0,big*1.5,-dim.height-dim.size))
-	end
-	interior:UpdateModel()
-	interior.Angles = Angle(0,-90,0)
-	interior.DragMousePress = function(self)
-		self.PressX, self.PressY = gui.MousePos()
-		self.Pressed = true
-	end
-	interior.DragMouseRelease = function(self)
-		self.Pressed = false
-	end
-	interior.LayoutEntity = function(self, ent)
-		if self.Pressed then
-			local mx, my = gui.MousePos()
-			self.Angles = self.Angles - Angle( 0, ( self.PressX or mx ) - mx, 0 )
-			
-			self.PressX, self.PressY = gui.MousePos()
-		end
-		ent:SetAngles( self.Angles )
-	end
-	interior.PreDrawModel = function(interior,ent)
-		ent:CustomDrawModel(true,2)
-		return false
-	end
-	
-	local toggle=vgui.Create("DButton",modelpanel)
-	toggle:SetSize(modelpanel:GetWide()*0.1,modelpanel:GetWide()*0.05)
-	toggle:SetText("Toggle")
-	toggle.toggled = false
-	toggle.DoClick = function(toggle)
-		toggle.toggled = not toggle.toggled
-		if toggle.toggled then
-			exterior:SetVisible(false)
-			interior:SetVisible(true)
-		else
-			exterior:SetVisible(true)
-			interior:SetVisible(false)
-		end
-	end
-	
-	local settingpanel=vgui.Create("DPanel",panel)
-	settingpanel:SetSize(panel:GetWide()/2,panel:GetTall())
-	settingpanel:SetPos(panel:GetWide()/2,0)
-	settingpanel:SetBackgroundColor(Color(200,200,200))
-	
-	local th = margin
-	for _,category in ipairs(SafeSpace:GetOptions()) do
-		local label=vgui.Create("DLabel",settingpanel)
-		label:SetFont("DermaLarge")
-		label:SetDark(true)
-		label:SetText(category.name)
-		label:SetPos(margin,th)
-		label:SizeToContents()
-		th = th + 30
-		for _,option in ipairs(category) do
-			local slider=vgui.Create("DNumSlider",settingpanel)
-			option.slider=slider
-			slider.category = category.id
-			slider.option = option.id
-			slider:SetPos(margin,th)
-			slider:SetWide(settingpanel:GetWide()-(margin))
-			slider:SetMin(option.min)
-			slider:SetMax(option.max)
-			slider:SetDecimals(0)
-			slider:SetText(option.name)
-			slider.Label:SetDark(true)
-			slider:SetValue(option.value)
-			slider.OnValueChanged = function(slider,value)
-				SafeSpace:GetOption(slider.category,slider.option).tempvalue=value
-				exterior:UpdateModel()
-				interior:UpdateModel()
-			end
-			th = th + 30
-		end
-		th = th + 10
-	end
-	
-	local save=vgui.Create("DButton",settingpanel)
-	save:SetSize(settingpanel:GetWide()*0.1,settingpanel:GetWide()*0.05)
-	save:SetPos(settingpanel:GetWide()-save:GetWide(),settingpanel:GetTall()-save:GetTall())
-	save:SetText("Save")
-	save.DoClick = function(save)
-		for _,cat in ipairs(options) do
-			for _,opt in ipairs(cat) do
-				local o = SafeSpace:GetOption(cat.id,opt.id)
-				if o and o.convar and o.tempvalue and o.value and o.tempvalue ~= o.value then
-					o.convar:SetInt(o.tempvalue)
-				end
-			end
-		end
-	end
-	
-	local revert=vgui.Create("DButton",settingpanel)
-	local x,y = save:GetPos()
-	revert:SetSize(settingpanel:GetWide()*0.1,settingpanel:GetWide()*0.05)
-	revert:SetPos(x-revert:GetWide()-5,y)
-	revert:SetText("Revert")
-	revert.DoClick = function(revert)
-		SafeSpace:ResetOptionChanges()
-		exterior:UpdateModel()
-		interior:UpdateModel()
-	end
-	
-	local default=vgui.Create("DButton",settingpanel)
-	local x,y = revert:GetPos()
-	default:SetSize(settingpanel:GetWide()*0.1,settingpanel:GetWide()*0.05)
-	default:SetPos(x-default:GetWide()-5,y)
-	default:SetText("Default")
-	default.DoClick = function(default)
-		SafeSpace:SetDefaultOptions()
-		exterior:UpdateModel()
-		interior:UpdateModel()
-	end
-	
-	local preset=vgui.Create("DButton",settingpanel)
-	local x,y = default:GetPos()
-	preset:SetSize(settingpanel:GetWide()*0.1,settingpanel:GetWide()*0.05)
-	preset:SetPos(x-default:GetWide()-5,y)
-	preset:SetText("Presets")
-	preset.DoClick = function(preset)
-		SafeSpace:OpenPresets()
-	end
-	
-	frame:MakePopup()
 end
 
 function SafeSpace:OpenPresets()
 	local frame=vgui.Create("DFrame")
-	frame:SetSize(ScrW()*0.1,ScrH()*0.3)
+	frame:SetSize(ScrW()*0.15,ScrH()*0.4)
 	frame:SetTitle("Presets")
 	frame:SetDraggable(true)
 	frame:Center()
@@ -363,7 +155,7 @@ function SafeSpace:OpenPresets()
 	
 	local presetlist = vgui.Create("DListView",panel)
 	presetlist:SetWide(panel:GetWide())
-	presetlist:SetTall(panel:GetTall()*0.85-2)
+	presetlist:SetTall(panel:GetTall()-45)
 	presetlist:SetMultiSelect(false)
 	presetlist:AddColumn( "Preset" )
 	local datastr=file.Read("safespace_presets.txt","DATA")
@@ -376,7 +168,7 @@ function SafeSpace:OpenPresets()
 	presetlist:SelectFirstItem()
 	
 	local save=vgui.Create("DButton",panel)
-	save:SetSize(panel:GetWide()*0.2,panel:GetTall()*0.075)
+	save:SetSize(35,20)
 	save:SetPos(panel:GetWide()-save:GetWide(),panel:GetTall()-save:GetTall())
 	save:SetText("Save")
 	save.DoClick = function(save)
@@ -391,7 +183,7 @@ function SafeSpace:OpenPresets()
 	
 	local load=vgui.Create("DButton",panel)
 	local x,y = save:GetPos()
-	load:SetSize(panel:GetWide()*0.2,panel:GetTall()*0.075)
+	load:SetSize(35,20)
 	load:SetPos(x-load:GetWide()-5,y)
 	load:SetText("Load")
 	load.DoClick = function(load)
@@ -417,7 +209,7 @@ function SafeSpace:OpenPresets()
 	
 	local new=vgui.Create("DButton",panel)
 	local x,y = load:GetPos()
-	new:SetSize(panel:GetWide()*0.2,panel:GetTall()*0.075)
+	new:SetSize(35,20)
 	new:SetPos(x-new:GetWide()-5,y)
 	new:SetText("New")
 	new.DoClick = function(new)
@@ -441,7 +233,7 @@ function SafeSpace:OpenPresets()
 	end
 	
 	local remove=vgui.Create("DButton",panel)
-	remove:SetSize(panel:GetWide()*0.25,panel:GetTall()*0.075)
+	remove:SetSize(50,20)
 	remove:SetPos(panel:GetWide()-remove:GetWide(),panel:GetTall()-remove:GetTall()-new:GetTall()-2)
 	remove:SetText("Remove")
 	remove.DoClick = function(remove)
@@ -459,7 +251,7 @@ function SafeSpace:OpenPresets()
 	
 	local rename=vgui.Create("DButton",panel)
 	local x,y = remove:GetPos()
-	rename:SetSize(panel:GetWide()*0.25,panel:GetTall()*0.075)
+	rename:SetSize(50,20)
 	rename:SetPos(x-rename:GetWide()-5,y)
 	rename:SetText("Rename")
 	rename.DoClick = function(rename)

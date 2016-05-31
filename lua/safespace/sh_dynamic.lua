@@ -152,6 +152,7 @@ function SafeSpace:MakeCube(pos,ang,length,width,height,texscale)
 	return verts,vertices
 end
 
+
 local custom_surfacetypes = {}
 local valid_surfacetypes = {} --a confirmation global list to make sure the client doesn't load in surface types not on the list
 function SafeSpace:AddCustomSurface(displayname, surfaceid, category, icon, categoryicon)
@@ -176,7 +177,6 @@ function SafeSpace:AddCustomSurface(displayname, surfaceid, category, icon, cate
 	custom_surfacetypes[category][displayname].icon = icon or custom_surfacetypes[category].icon or "" --Set it to the parent icon if not specified
 	custom_surfacetypes[category][displayname].real = surfaceid
 	table.insert(valid_surfacetypes,surfaceid)
-	if CLIENT then RunConsoleCommand("spawnmenu_reload") end
 end
 
 function SafeSpace:GetCustomSurfaces()
@@ -359,21 +359,31 @@ function SafeSpace:Init(ent)
 			end)
 		end
 		
-		ent.CustomDrawModel = function(self,editor,mode)
+		ent.CustomDrawModel = function(self,ghost)
 			if self.mesh then
 				local mat = Matrix()
-				mat:Translate(self:GetPos())
-				mat:Rotate(self:GetAngles())
+				local translate = self:GetPos()
+				if ghost and self.exterior then
+					translate = self:LocalToWorld(Vector(-30,0,50))
+				end
+				mat:Translate(translate)
+				local rotate = self:GetAngles()
+				if ghost and self.exterior then
+					rotate:RotateAroundAxis(rotate:Up(),180)
+				end
+				mat:Rotate(rotate)
 				mat:Scale(scale)
 				-- fixes it going black sometimes
-				if not editor then
-					render.ResetModelLighting(0,0,0)
-					render.SetLocalModelLights(self:GetLighting())					
+				render.ResetModelLighting(0,0,0)
+				render.SetLocalModelLights(self:GetLighting())					
+				--bit of explanation for this; as it may seem weird. Without this little workaround; only the exterior texture will set.
+				--also NW2Vars were found to be unreliable for this
+				if ghost and self.interior then 
+					render.SetMaterial(Material(GetConVar("safespace_texture_exterior"):GetString()))
+				elseif ghost and self.exterior then
+					render.SetMaterial(Material(GetConVar("safespace_texture_interior"):GetString()))
+				else
 					render.SetMaterial(Material(self.material))
-				elseif mode == 1 then
-						render.SetMaterial(Material(GetConVar("safespace_texture_exterior"):GetString()))
-				elseif mode == 2 then
-						render.SetMaterial(Material(GetConVar("safespace_texture_interior"):GetString()))
 				end
 
 				cam.PushModelMatrix(mat)
