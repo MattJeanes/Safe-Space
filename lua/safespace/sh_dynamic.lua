@@ -153,76 +153,6 @@ function SafeSpace:MakeCube(pos,ang,length,width,height,texscale)
 end
 
 
-local custom_surfacetypes = {}
-local valid_surfacetypes = {} --a confirmation global list to make sure the client doesn't load in surface types not on the list
-function SafeSpace:AddCustomSurface(displayname, surfaceid, category, icon, categoryicon)
-	if not surfaceid or not displayname then return end
-
-	if util.GetSurfaceIndex( surfaceid )==-1 then 
-		print("\n-----------------\nSafe Space: The SurfaceID \""..surfaceid.."\" provided for \""..displayname.."\" is invalid.\n")
-		print("For a complete list of valid surfaces, please visit:\n")
-		print("https://developer.valvesoftware.com/wiki/Material_surface_properties\n\n-----------------")
-		return
-	end
-
-	category = category or "Unspecified"
-
-	if not custom_surfacetypes[category] then
-		custom_surfacetypes[category] = {}
-	end
-
-	custom_surfacetypes[category].icon = categoryicon or custom_surfacetypes[category].icon or ""
-
-	custom_surfacetypes[category][displayname] = {}
-	custom_surfacetypes[category][displayname].icon = icon or custom_surfacetypes[category].icon or "" --Set it to the parent icon if not specified
-	custom_surfacetypes[category][displayname].real = surfaceid
-	table.insert(valid_surfacetypes,surfaceid)
-	if CLIENT then RunConsoleCommand("spawnmenu_reload") end
-end
-
-function SafeSpace:GetCustomSurfaces()
-	return custom_surfacetypes
-end
-
---Surface Reference: https://developer.valvesoftware.com/wiki/Material_surface_properties
---Icon Reference: http://www.famfamfam.com/lab/icons/silk/previews/index_abc.png
---Usage: SafeSpace:AddCustomSurface(string DisplayName, string SurfaceString, string Category, string Icon=parenticon, string CategoryIcon)
---Note: Only need to set category icon once per/each; however individual icons are supported
-
---I feel like these should be moved to their own shared file
-SafeSpace:AddCustomSurface("Basic Metal","metal","Metals","shape_handles","shape_handles")
-SafeSpace:AddCustomSurface("Alternative Metal","rollermine","Metals")
-SafeSpace:AddCustomSurface("Metal Barrel","metal_barrel","Metals")
-SafeSpace:AddCustomSurface("Chainlink","chainlink","Metals")
-SafeSpace:AddCustomSurface("Slippery Metal","slipperymetal","Metals")
-
-SafeSpace:AddCustomSurface("Sticky Walls","ladder","Fun","rainbow","rainbow")
-SafeSpace:AddCustomSurface("Ice","ice","Fun")
-SafeSpace:AddCustomSurface("Dense Ice","gmod_ice","Fun")
-SafeSpace:AddCustomSurface("Think Plastic","item","Fun")
-SafeSpace:AddCustomSurface("Snow","snow","Fun")
-SafeSpace:AddCustomSurface("Bouncy","metal_bouncy","Fun")
-
-SafeSpace:AddCustomSurface("Brick","brick","Concrete / Rock","lorry","lorry")
-SafeSpace:AddCustomSurface("Gravel","gravel","Concrete / Rock")
-SafeSpace:AddCustomSurface("Rock","rock","Concrete / Rock")
-SafeSpace:AddCustomSurface("Concrete","concrete","Concrete / Rock")
-
-SafeSpace:AddCustomSurface("Water","water","Liquid","anchor","anchor")
-SafeSpace:AddCustomSurface("Slime","slime","Liquid")
-SafeSpace:AddCustomSurface("Wade","wade","Liquid")
-
-SafeSpace:AddCustomSurface("Dirt","dirt","Nature","world","world")
-SafeSpace:AddCustomSurface("Wood","wood","Nature","world","world")
-SafeSpace:AddCustomSurface("Grass","grass","Nature")
-SafeSpace:AddCustomSurface("Mud","mud","Nature")
-SafeSpace:AddCustomSurface("Sand","sand","Nature")
-
-SafeSpace:AddCustomSurface("Paper","paper","Misc","chart_pie","chart_pie")
-SafeSpace:AddCustomSurface("Plastic","plastic","Misc")
-SafeSpace:AddCustomSurface("Cardboard","cardboard","Misc")
-SafeSpace:AddCustomSurface("Glass","glass","Misc")
-
 
 
 
@@ -345,7 +275,7 @@ function SafeSpace:Init(ent)
 	end	
 	
 	ent.phys:SetMass(50000)
-	ent.phys:SetMaterial(ent:GetNWString("safespace_surface","metal"))
+	ent.phys:SetMaterial(ent.surfacetype or "metal")
 	ent.phys:EnableMotion(false)
 	
 	if CLIENT then
@@ -370,9 +300,7 @@ function SafeSpace:Init(ent)
 				if not editor then
 					render.ResetModelLighting(0,0,0)
 					render.SetLocalModelLights(self:GetLighting())					
-					--bit of explanation for this; as it may seem weird. Without this little workaround; only the exterior texture will set.
-					--also NW2Vars were found to be unreliable for this
-					render.SetMaterial(Material(self:GetNWString("safespace_texture_exterior",self:GetNWString("safespace_texture_interior","sprops/sprops_grid_12x12"))))
+					render.SetMaterial(Material(self.material))
 				elseif mode == 1 then
 						render.SetMaterial(Material(GetConVar("safespace_texture_exterior"):GetString()))
 				elseif mode == 2 then
