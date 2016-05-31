@@ -11,4 +11,5 @@ function ENT:Initialize()
 	self.Portal=self:GetPortalDimensions()
 	self.BaseClass.Initialize(self)
 	self:SetNWString("safespace_texture_interior",SafeSpace:GetTextureInterior(self:GetCreator()) or "sprops/sprops_grid_12x12")
+	self:SetNWString("safespace_surface",SafeSpace:GetSurfaceProperty(self:GetCreator()) or "metal")
 end

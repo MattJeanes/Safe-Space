@@ -123,6 +123,7 @@ end
 if CLIENT then
 	CreateClientConVar("safespace_texture_exterior","sprops/sprops_grid_12x12",true,true)
 	CreateClientConVar("safespace_texture_interior","sprops/sprops_grid_12x12",true,true)
+	CreateClientConVar("safespace_surface","metal",true,true)
 	for _,cat in ipairs(options) do
 		for _,opt in ipairs(cat) do
 			opt.convar = CreateClientConVar(SafeSpace:GetOptionConVarName(cat.id,opt.id), opt.default, true, true)
