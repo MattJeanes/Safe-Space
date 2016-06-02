@@ -16,8 +16,13 @@ end
 function TOOL:LeftClick( trace )
 	if IsValid(trace.Entity) and trace.Entity:IsPlayer() then return false end
 	if CLIENT then return true end
-	local ang = trace.HitNormal:Angle()
-	ang.pitch = ang.pitch + 90
+	local ang
+	if self:GetOwner():KeyDown(IN_WALK) then
+		ang=Angle(0, (self:GetOwner():GetPos()-trace.HitPos):Angle().y, 0)
+	else
+		ang = trace.HitNormal:Angle()
+		ang.pitch = ang.pitch + 90
+	end
 	local ent = MakeSafeSpace(self:GetOwner(),trace.HitPos,ang)
 	if not IsValid(ent) then return false end
 	return true
@@ -57,6 +62,12 @@ else
 	end
 	
 	hook.Add("PostDrawTranslucentRenderables","safespace-ghost",function()
+		if not SafeSpace.showghost then
+			SafeSpace.showghost = GetConVar("safespace_showghost")
+		end
+		if not SafeSpace.showghostint then
+			SafeSpace.showghostint = GetConVar("safespace_showghostint")
+		end
 		local ext = SafeSpace.GhostExterior
 		local int = SafeSpace.GhostInterior
 		if IsValid(ext) and IsValid(int) and ext.shoulddraw then
@@ -66,8 +77,12 @@ else
 				draw.DrawText(tostring(int:GetPos()),"DermaLarge",ScrW(),50,Color(255,255,255),TEXT_ALIGN_RIGHT)
 			cam.End2D()
 			]]--
-			ext:CustomDrawModel(true)
-			int:CustomDrawModel(true)
+			if SafeSpace.showghost:GetBool() then
+				ext:CustomDrawModel(true)
+				if SafeSpace.showghostint:GetBool() then
+					int:CustomDrawModel(true)
+				end
+			end
 		end
 	end)
 	
@@ -82,13 +97,16 @@ else
 			ent.shoulddraw = false
 			return
 		end
-
-		local ang = trace.HitNormal:Angle()
-		ang.pitch = ang.pitch + 90
-
-		local min = ent:OBBMins()
-		local pos = trace.HitPos - trace.HitNormal * min.z
-		ent:SetPos(pos)
+		
+		ent:SetPos(trace.HitPos)
+		
+		local ang
+		if LocalPlayer():KeyDown(IN_WALK) then
+			ang=Angle(0, (self:GetOwner():GetPos()-trace.HitPos):Angle().y, 0)
+		else
+			ang = trace.HitNormal:Angle()
+			ang.pitch = ang.pitch + 90
+		end
 		ent:SetAngles(ang)
 		
 		if not ent.shoulddraw then

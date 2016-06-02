@@ -233,7 +233,6 @@ function SafeSpace:GetTextureInterior(ply)
 end
 
 local wireframe=Material("models/wireframe")
-
 local scale=Vector(1,1,1)
 
 function SafeSpace:Init(ent)
@@ -281,7 +280,9 @@ function SafeSpace:Init(ent)
 				local mat = Matrix()
 				local translate = self:GetPos()
 				if ghost and self.exterior then
-					translate = self.exterior:LocalToWorld(Vector(-30,0,50))
+					local dim = self:GetDimensions()
+					local edim = self.exterior:GetDimensions()
+					translate = self.exterior:LocalToWorld(Vector((-dim.width/2)+edim.size/2,0,(dim.height+dim.size)/2))
 				end
 				mat:Translate(translate)
 				local rotate = self:GetAngles()
@@ -292,13 +293,9 @@ function SafeSpace:Init(ent)
 				mat:Scale(scale)
 				-- fixes it going black sometimes
 				render.ResetModelLighting(0,0,0)
-				render.SetLocalModelLights(self:GetLighting())					
-				--bit of explanation for this; as it may seem weird. Without this little workaround; only the exterior texture will set.
-				--also NW2Vars were found to be unreliable for this
-				if ghost and self.interior then 
-					render.SetMaterial(Material(GetConVar("safespace_texture_exterior"):GetString()))
-				elseif ghost and self.exterior then
-					render.SetMaterial(Material(GetConVar("safespace_texture_interior"):GetString()))
+				render.SetLocalModelLights(self:GetLighting())
+				if ghost then
+					render.SetMaterial(wireframe)
 				else
 					render.SetMaterial(Material(self.material))
 				end

@@ -7,10 +7,10 @@ function SafeSpace:CreateGhost()
 	exterior:SetNoDraw(true)
 	exterior.GetDimensions = function(ent)
 		return {
-			width = self:GetOption("exterior","width").tempvalue,
-			height = self:GetOption("exterior","height").tempvalue,
-			size = self:GetOption("global","size").tempvalue,
-			texscale = self:GetOption("global","texscale").tempvalue
+			width = self:GetOption("exterior","width").value,
+			height = self:GetOption("exterior","height").value,
+			size = self:GetOption("global","size").value,
+			texscale = self:GetOption("global","texscale").value
 		}
 	end
 	exterior.GetLighting = function(ent)
@@ -33,10 +33,10 @@ function SafeSpace:CreateGhost()
 	interior:SetNoDraw(true)
 	interior.GetDimensions = function(ent)
 		return {
-			width = self:GetOption("interior","width").tempvalue,
-			height = self:GetOption("interior","height").tempvalue,
-			length = self:GetOption("interior","length").tempvalue,
-			size = self:GetOption("global","size").tempvalue
+			width = self:GetOption("interior","width").value,
+			height = self:GetOption("interior","height").value,
+			length = self:GetOption("interior","length").value,
+			size = self:GetOption("global","size").value
 		}
 	end
 	interior.GetPortalDimensions = function(ent)

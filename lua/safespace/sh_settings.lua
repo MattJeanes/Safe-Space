@@ -82,8 +82,8 @@ function SafeSpace:GetOption(category,option,ply)
 						opt.value = opt.default
 					end
 					opt.value = math.max(opt.min,math.min(opt.max,opt.value))
-					if CLIENT and (not opt.tempvalue) then
-						opt.tempvalue = opt.value
+					if CLIENT and (not opt.savedvalue) then
+						opt.savedvalue = opt.value
 					end
 					return opt
 				end
@@ -93,13 +93,21 @@ function SafeSpace:GetOption(category,option,ply)
 	return false
 end
 
+function SafeSpace:SaveOptions()
+	for _,cat in ipairs(options) do
+		for _,opt in ipairs(cat) do
+			local o = SafeSpace:GetOption(cat.id,opt.id)
+			o.savedvalue = o.value
+		end
+	end
+end
+
 function SafeSpace:ResetOptionChanges()
 	for _,cat in ipairs(options) do
 		for _,opt in ipairs(cat) do
 			local o = SafeSpace:GetOption(cat.id,opt.id)
-			o.tempvalue = o.value
-			if IsValid(o.slider) then
-				o.slider:SetValue(o.tempvalue)
+			if o.convar then
+				o.convar:SetInt(o.savedvalue)
 			end
 		end
 	end
@@ -108,9 +116,9 @@ end
 function SafeSpace:SetDefaultOptions()
 	for _,cat in ipairs(options) do
 		for _,opt in ipairs(cat) do
-			opt.tempvalue = opt.default
-			if IsValid(opt.slider) then
-				opt.slider:SetValue(opt.tempvalue)
+			opt.value = opt.default
+			if opt.convar then
+				opt.convar:SetInt(opt.value)
 			end
 		end
 	end
@@ -124,6 +132,8 @@ if CLIENT then
 	CreateClientConVar("safespace_texture_exterior","sprops/sprops_grid_12x12",true,true)
 	CreateClientConVar("safespace_texture_interior","sprops/sprops_grid_12x12",true,true)
 	CreateClientConVar("safespace_surface","metal",true,true)
+	CreateClientConVar("safespace_showghost","1")	
+	CreateClientConVar("safespace_showghostint","1")
 	for _,cat in ipairs(options) do
 		for _,opt in ipairs(cat) do
 			opt.convar = CreateClientConVar(SafeSpace:GetOptionConVarName(cat.id,opt.id), opt.default, true, true)

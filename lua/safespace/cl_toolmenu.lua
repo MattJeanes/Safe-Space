@@ -2,6 +2,21 @@
 
 function SafeSpace:CreateToolMenu(panel)
 	panel:AddControl( "Header", { Description = "#tool.safespace.desc" } )
+	
+	local showghost=vgui.Create("DCheckBoxLabel")
+	showghost:SetConVar("safespace_showghost")
+	showghost:SetText("Show Ghost")
+	showghost:SetDark(true)
+	showghost:SizeToContents()
+	panel:AddItem(showghost)
+	
+	local showghostint=vgui.Create("DCheckBoxLabel")
+	showghostint:SetConVar("safespace_showghostint")
+	showghostint:SetText("Show Ghost Interior")
+	showghostint:SetDark(true)
+	showghostint:SizeToContents()
+	panel:AddItem(showghostint)
+	
 	for _,category in ipairs(SafeSpace:GetOptions()) do
 		local label=vgui.Create("DLabel")
 		label:SetFont("DermaLarge")
@@ -20,8 +35,8 @@ function SafeSpace:CreateToolMenu(panel)
 			slider:SetText(option.name)
 			slider.Label:SetDark(true)
 			slider:SetValue(option.value)
+			slider:SetConVar(self:GetOptionConVarName(category.id,option.id))
 			slider.OnValueChanged = function(slider,value)
-				SafeSpace:GetOption(slider.category,slider.option).tempvalue=value
 				SafeSpace:UpdateGhost()
 			end
 			panel:AddItem(slider)
@@ -31,14 +46,7 @@ function SafeSpace:CreateToolMenu(panel)
 	local save=vgui.Create("DButton")
 	save:SetText("Save")
 	save.DoClick = function(save)
-		for _,cat in ipairs(SafeSpace:GetOptions()) do
-			for _,opt in ipairs(cat) do
-				local o = SafeSpace:GetOption(cat.id,opt.id)
-				if o and o.convar and o.tempvalue and o.value and o.tempvalue ~= o.value then
-					o.convar:SetInt(o.tempvalue)
-				end
-			end
-		end
+		SafeSpace:SaveOptions()
 	end
 	panel:AddItem(save)
 	
@@ -65,11 +73,32 @@ function SafeSpace:CreateToolMenu(panel)
 	end
 	panel:AddItem(preset)
 	
-	panel:AddControl( "Header", { Description = "Surface Type:" } )
+	local matselect = panel:MatSelect( "safespace_texture_exterior", list.Get( "OverrideMaterials" ), true, 64, 64 )
+	local scroll = vgui.Create("DScrollPanel")
+	matselect:SetParent(scroll)
+	local collapse = vgui.Create("DCollapsibleCategory")
+	collapse:SetLabel("Exterior material")
+	collapse:SetExpanded(0)
+	collapse:SetContents(scroll)
+	panel:AddItem(collapse)
+	collapse.SizeToChildren = function(collapse)
+		collapse:SetTall(200)
+	end
 
+	local matselect = panel:MatSelect( "safespace_texture_interior", list.Get( "OverrideMaterials" ), true, 64, 64 )
+	local scroll = vgui.Create("DScrollPanel")
+	matselect:SetParent(scroll)
+	local collapse = vgui.Create("DCollapsibleCategory")
+	collapse:SetLabel("Interior material")
+	collapse:SetExpanded(0)
+	collapse:SetContents(scroll)
+	panel:AddItem(collapse)
+	collapse.SizeToChildren = function(collapse)
+		collapse:SetTall(200)
+	end
+	
 	local valid_surfaces = SafeSpace:GetCustomSurfaces()
-	local surface_properties = vgui.Create( "DTree", panel )
-
+	local surface_properties = vgui.Create("DTree")
 	for k, v in pairs(valid_surfaces) do
 		local folder = surface_properties:AddNode(k)
 		local foldericon = v.icon
@@ -82,16 +111,12 @@ function SafeSpace:CreateToolMenu(panel)
 			subsurface:SetIcon((file.Exists( "materials/icon16/"..subicon..".png", "GAME" ) and "icon16/"..subicon..".png") or "icon16/page.png")	
 		end
 	end
-
-	surface_properties:SetSize(panel:GetWide(),300)
-	panel:AddItem(surface_properties)
-	
-	surface_properties.OnNodeSelected = function( self )
+	surface_properties.OnNodeSelected = function(self)
 		local con = GetConVar("safespace_surface")
 		local category = self:GetSelectedItem():GetParentNode():GetText()
 		local s_surface = self:GetSelectedItem():GetText()
 
-		if category!="" then
+		if category ~= "" then
 			local var = valid_surfaces[category][s_surface].real
 			con:SetString(var)
 			notification.AddLegacy("Surface Updated: "..s_surface,0,5)
@@ -99,17 +124,15 @@ function SafeSpace:CreateToolMenu(panel)
 		end
 	end
 	
-	local matselectex = panel:MatSelect( "safespace_texture_exterior", list.Get( "OverrideMaterials" ), true, 64, 64 )
-	local mat_ex = vgui.Create("DCollapsibleCategory")
-	panel:AddItem(mat_ex)
-	mat_ex:SetLabel("Exterior Material")
-	mat_ex:SetExpanded(0)
-	mat_ex:SetContents(matselectex)
-
-	local matselectint = panel:MatSelect( "safespace_texture_interior", list.Get( "OverrideMaterials" ), true, 64, 64 )
-	local mat_in = vgui.Create("DCollapsibleCategory")
-	panel:AddItem(mat_in)
-	mat_in:SetLabel("Interior Material")
-	mat_in:SetExpanded(0)
-	mat_in:SetContents(matselectint)
+	local collapse = vgui.Create("DCollapsibleCategory")
+	collapse:SetLabel("Surface properties")
+	collapse:SetExpanded(0)
+	collapse:SetContents(surface_properties)
+	panel:AddItem(collapse)
+	collapse.SizeToChildren = function(collapse)
+		collapse:SetTall(200)
+	end
+	
+	SafeSpace:ResetOptionChanges()
+	SafeSpace:UpdateGhost()
 end
