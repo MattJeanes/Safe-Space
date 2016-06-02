@@ -9,8 +9,9 @@ if CLIENT then
 	language.Add("tool.safespace.name", "Safe Space")
 	language.Add("tool.safespace.desc", "Create your own private areas")
 	language.Add("tool.safespace.0", "Left click to create a Safe Space")
-	language.Add("Undone_safespace", "Undone Safe Space")
-	language.Add("Cleanup_safespace", "Safe Spaces")
+	language.Add("Undone_safespaces", "Undone Safe Space")
+	language.Add("Cleanup_safespaces", "Safe Spaces")
+	language.Add("SBoxLimit_safespaces", "You've hit Safe Spaces limit!")
 end
 
 function TOOL:LeftClick( trace )
@@ -29,8 +30,9 @@ function TOOL:LeftClick( trace )
 end
 
 if SERVER then
+	CreateConVar("sbox_maxsafespaces",5)
 	function MakeSafeSpace(ply,pos,ang)
-		if IsValid(ply) and (not ply:CheckLimit("safespace")) then return false end
+		if IsValid(ply) and (not ply:CheckLimit("safespaces")) then return false end
 	
 		local ent = ents.Create("gmod_safespace")
 		if not IsValid(ent) then return false end
@@ -45,8 +47,8 @@ if SERVER then
 		ent:Activate()
 		
 		if IsValid(ply) then
-			ply:AddCount("safespace", ent)
-			undo.Create("safespace")
+			ply:AddCount("safespaces", ent)
+			undo.Create("safespaces")
 				undo.AddEntity(ent)
 				undo.SetPlayer(ply)
 			undo.Finish()
