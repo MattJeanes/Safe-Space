@@ -1,6 +1,6 @@
 -- Test
 
-ENT:AddHook("Initialize","test",function(self)
+ENT:AddHook(SERVER and "PreInitialize" or "Initialize","safespace",function(self)
 	SafeSpace:MakeInterior(self)
 end)
 

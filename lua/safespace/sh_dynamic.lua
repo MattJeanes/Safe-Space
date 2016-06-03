@@ -152,6 +152,7 @@ function SafeSpace:MakeCube(pos,ang,length,width,height,texscale)
 	return verts,vertices
 end
 
+
 function SafeSpace:GetExteriorDimensions(ply)
 	return {
 		width = SafeSpace:GetOption("exterior","width",ply).value,
@@ -223,7 +224,14 @@ function SafeSpace:GetInteriorLighting(ent)
 	}
 end
 
-local rendermat=Material("sprops/sprops_grid_12x12")
+function SafeSpace:GetTextureExterior(ply)
+	return ply:GetInfo("safespace_texture_exterior")
+end
+
+function SafeSpace:GetTextureInterior(ply)
+	return ply:GetInfo("safespace_texture_interior")
+end
+
 local wireframe=Material("models/wireframe")
 local scale=Vector(1,1,1)
 
@@ -252,7 +260,7 @@ function SafeSpace:Init(ent)
 	end	
 	
 	ent.phys:SetMass(50000)
-	ent.phys:SetMaterial("metal") -- todo, custom?
+	ent.phys:SetMaterial(ent.surfacetype or "metal")
 	ent.phys:EnableMotion(false)
 	
 	if CLIENT then
@@ -267,23 +275,36 @@ function SafeSpace:Init(ent)
 			end)
 		end
 		
-		ent.CustomDrawModel = function(self,editor)
+		ent.CustomDrawModel = function(self,ghost)
 			if self.mesh then
 				local mat = Matrix()
-				mat:Translate(self:GetPos())
-				mat:Rotate(self:GetAngles())
+				local translate = self:GetPos()
+				if ghost and self.exterior then
+					local dim = self:GetDimensions()
+					local edim = self.exterior:GetDimensions()
+					translate = self.exterior:LocalToWorld(Vector((-dim.width/2)+edim.size/2,0,(dim.height+dim.size)/2))
+				end
+				mat:Translate(translate)
+				local rotate = self:GetAngles()
+				if ghost and self.exterior then
+					rotate:RotateAroundAxis(rotate:Up(),180)
+				end
+				mat:Rotate(rotate)
 				mat:Scale(scale)
 				-- fixes it going black sometimes
-				if not editor then
-					render.ResetModelLighting(0,0,0)
-					render.SetLocalModelLights(self:GetLighting())
+				render.ResetModelLighting(0,0,0)
+				render.SetLocalModelLights(self:GetLighting())
+				if ghost then
+					render.SetMaterial(wireframe)
+				else
+					render.SetMaterial(Material(self.material))
 				end
-				render.SetMaterial(rendermat)
+
 				cam.PushModelMatrix(mat)
 					self.mesh:Draw()
 				cam.PopModelMatrix()
 				
-				/*
+				--[[
 				-- draws 'Drawing' text in top left if drawing
 				cam.Start2D()
 					draw.DrawText("Drawing","DermaLarge",0,0,Color(255,0,0,255))
@@ -301,7 +322,7 @@ function SafeSpace:Init(ent)
 					render.SetMaterial(wireframe)
 					render.DrawBox(self:GetPos(),self:GetAngles(),mins,maxs,Color(255,0,0,255),false)
 				end
-				*/
+				]]--
 			end
 		end
 	end
@@ -333,10 +354,6 @@ function SafeSpace:MakeInterior(ent)
 	local edim=ent.exterior:GetDimensions()
 	local dim=ent:GetDimensions()
 	local offset=Vector(dim.width/2,dim.length/2,(dim.height-dim.size)/2)
-	if not ent.origpos then
-		ent.origpos=ent:GetPos()
-	end
-	ent:SetPos(ent.origpos+Vector(0,0,-dim.height))
 	ent.sections={
 		{self:MakeCube(Vector(-dim.width/2,-dim.length/2,(-dim.size/2)-dim.height)+offset,Angle(0,0,0),dim.width,dim.length,dim.size,edim.texscale)}, -- floor
 		{self:MakeCube(Vector(-dim.width/2,-dim.length/2,(dim.height-dim.size/2)-dim.height)+offset,Angle(0,0,0),dim.width,dim.length,dim.size,edim.texscale)}, -- ceiling
@@ -349,10 +366,10 @@ function SafeSpace:MakeInterior(ent)
 	}
 	
 	local mins,maxs=Vector(-dim.width/2,-dim.length/2,((-dim.height-dim.size)/2)-dim.size),Vector(dim.width/2,dim.length/2,(dim.height-dim.size)/2)
+	ent.mins,ent.maxs=mins,maxs
 	if SERVER then
 		local allowance=Vector(1,1,1)*100 -- let people go a bit out of the box
-		ent.mins,ent.maxs=ent:LocalToWorld(mins-allowance),ent:LocalToWorld(maxs+allowance)
-		ent.ExitBox = {Min=ent.mins,Max=ent.maxs}
+		ent.ExitBox = {Min=mins-allowance,Max=maxs+allowance}
 	else
 		ent:SetRenderBounds(mins,maxs)
 	end
