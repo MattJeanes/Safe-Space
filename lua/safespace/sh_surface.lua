@@ -69,8 +69,10 @@ SafeSpace:AddCustomSurface("Cardboard","cardboard","Misc")
 SafeSpace:AddCustomSurface("Glass","glass","Misc")
 
 function SafeSpace:GetSurfaceProperty(ply)
-	local surface = ply:GetInfo("safespace_surface")
-	if util.GetSurfaceIndex( surface )==-1 then return "metal" end
-	if not table.HasValue(valid_surfacetypes,surface) then return "metal" end
-	return ply:GetInfo("safespace_surface")
+	local surfacetype = ply:GetInfo("safespace_global_surface")
+	if table.HasValue(valid_surfacetypes,surfacetype) and util.GetSurfaceIndex(surfacetype) ~= -1 then
+		return surfacetype
+	else
+		return "metal"
+	end
 end

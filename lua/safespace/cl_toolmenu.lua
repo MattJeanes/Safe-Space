@@ -73,7 +73,7 @@ function SafeSpace:CreateToolMenu(panel)
 	end
 	panel:AddItem(preset)
 	
-	local matselect = panel:MatSelect( "safespace_texture_exterior", list.Get( "OverrideMaterials" ), true, 64, 64 )
+	local matselect = panel:MatSelect( "safespace_exterior_material", list.Get( "OverrideMaterials" ), true, 64, 64 )
 	local scroll = vgui.Create("DScrollPanel")
 	matselect:SetParent(scroll)
 	local collapse = vgui.Create("DCollapsibleCategory")
@@ -85,7 +85,7 @@ function SafeSpace:CreateToolMenu(panel)
 		collapse:SetTall(200)
 	end
 
-	local matselect = panel:MatSelect( "safespace_texture_interior", list.Get( "OverrideMaterials" ), true, 64, 64 )
+	local matselect = panel:MatSelect( "safespace_interior_material", list.Get( "OverrideMaterials" ), true, 64, 64 )
 	local scroll = vgui.Create("DScrollPanel")
 	matselect:SetParent(scroll)
 	local collapse = vgui.Create("DCollapsibleCategory")
@@ -112,15 +112,13 @@ function SafeSpace:CreateToolMenu(panel)
 		end
 	end
 	surface_properties.OnNodeSelected = function(self)
-		local con = GetConVar("safespace_surface")
+		local con = GetConVar("safespace_global_surface")
 		local category = self:GetSelectedItem():GetParentNode():GetText()
 		local s_surface = self:GetSelectedItem():GetText()
 
 		if category ~= "" then
 			local var = valid_surfaces[category][s_surface].real
 			con:SetString(var)
-			notification.AddLegacy("Surface Updated: "..s_surface,0,5)
-			surface.PlaySound( "buttons/button15.wav" )
 		end
 	end
 	

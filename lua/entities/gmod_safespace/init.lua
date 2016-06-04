@@ -12,7 +12,7 @@ end)
 function ENT:Initialize()
 	self.dimensions=SafeSpace:GetExteriorDimensions(self:GetCreator())
 	self.Portal=self:GetPortalDimensions()
-	self.material = SafeSpace:GetTextureExterior(self:GetCreator()) or "models/props_wasteland/wood_fence01a"
-	self.surfacetype = SafeSpace:GetSurfaceProperty(self:GetCreator()) or "metal"
+	self.material = SafeSpace:GetTextureExterior(self:GetCreator())
+	self.surfacetype = SafeSpace:GetSurfaceProperty(self:GetCreator())
 	self.BaseClass.Initialize(self)
 end

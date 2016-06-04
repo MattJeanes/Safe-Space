@@ -129,10 +129,10 @@ function SafeSpace:GetOptionConVarName(category,option)
 end
 
 if CLIENT then
-	CreateClientConVar("safespace_texture_exterior","sprops/sprops_grid_12x12",true,true)
-	CreateClientConVar("safespace_texture_interior","sprops/sprops_grid_12x12",true,true)
-	CreateClientConVar("safespace_surface","metal",true,true)
-	CreateClientConVar("safespace_showghost","1")	
+	CreateClientConVar("safespace_exterior_material","",true,true)
+	CreateClientConVar("safespace_interior_material","",true,true)
+	CreateClientConVar("safespace_global_surface","",true,true)
+	CreateClientConVar("safespace_showghost","1")
 	CreateClientConVar("safespace_showghostint","1")
 	for _,cat in ipairs(options) do
 		for _,opt in ipairs(cat) do

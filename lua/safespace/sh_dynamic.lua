@@ -152,7 +152,6 @@ function SafeSpace:MakeCube(pos,ang,length,width,height,texscale)
 	return verts,vertices
 end
 
-
 function SafeSpace:GetExteriorDimensions(ply)
 	return {
 		width = SafeSpace:GetOption("exterior","width",ply).value,
@@ -225,11 +224,21 @@ function SafeSpace:GetInteriorLighting(ent)
 end
 
 function SafeSpace:GetTextureExterior(ply)
-	return ply:GetInfo("safespace_texture_exterior")
+	local mat = ply:GetInfo("safespace_exterior_material")
+	if list.Contains("OverrideMaterials",mat) then
+		return mat
+	else
+		return "hunter/myplastic"
+	end
 end
 
 function SafeSpace:GetTextureInterior(ply)
-	return ply:GetInfo("safespace_texture_interior")
+	local mat = ply:GetInfo("safespace_interior_material")
+	if list.Contains("OverrideMaterials",mat) then
+		return mat
+	else
+		return "hunter/myplastic"
+	end
 end
 
 local wireframe=Material("models/wireframe")
