@@ -95,7 +95,7 @@ else
 		local trace = util.TraceLine(tr)
 		if not trace.Hit then return end
 		
-		if IsValid(trace.Entity) and (trace.Entity:GetClass()=="gmod_safespace" or trace.Entity:GetClass()=="gmod_safespace_interior" or trace.Entity:IsPlayer()) then
+		if IsValid(trace.Entity) and (trace.Entity:IsPlayer()) then
 			ent.shoulddraw = false
 			return
 		end

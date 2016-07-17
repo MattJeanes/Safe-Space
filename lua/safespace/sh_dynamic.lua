@@ -376,10 +376,8 @@ function SafeSpace:MakeInterior(ent)
 	
 	local mins,maxs=Vector(-dim.width/2,-dim.length/2,((-dim.height-dim.size)/2)-dim.size),Vector(dim.width/2,dim.length/2,(dim.height-dim.size)/2)
 	ent.mins,ent.maxs=mins,maxs
-	if SERVER then
-		local allowance=Vector(1,1,1)*100 -- let people go a bit out of the box
-		ent.ExitBox = {Min=mins-allowance,Max=maxs+allowance}
-	else
+	ent.ExitBox = {Min=mins,Max=maxs}
+	if CLIENT then
 		ent:SetRenderBounds(mins,maxs)
 	end
 	ent.Fallback={pos=Vector((-dim.width/2)+dim.size,0,((-dim.height-dim.size)/2))}

@@ -2,7 +2,6 @@ AddCSLuaFile('cl_init.lua')
 AddCSLuaFile('shared.lua')
 include('shared.lua')
 
-
 ENT:AddHook("PlayerInitialize", "interior", function(self)
 	net.WriteTable(self.dimensions)
 	net.WriteString(self.material)

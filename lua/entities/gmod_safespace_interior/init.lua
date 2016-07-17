@@ -6,6 +6,8 @@ ENT:AddHook("PlayerInitialize", "interior", function(self)
 	net.WriteTable(self.dimensions)
 	net.WriteString(self.material)
 	net.WriteString(self.surfacetype)
+	net.WriteVector(self.mins)
+	net.WriteVector(self.maxs)
 end)
 
 function ENT:Initialize()
