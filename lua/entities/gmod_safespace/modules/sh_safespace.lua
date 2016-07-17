@@ -1,6 +1,12 @@
--- Test
+-- Safe Space
 
-ENT:AddHook("Initialize","test",function(self)
+ENT:AddHook("InteriorReady","safespace",function(self,interior)
+	if not IsValid(interior) then
+		self:Remove() -- cannot function at all without interior
+	end
+end)
+
+ENT:AddHook("Initialize","safespace",function(self)
 	SafeSpace:MakeDoor(self)
 end)
 

@@ -1,4 +1,4 @@
--- Test
+-- Safe Space
 
 ENT:AddHook(SERVER and "PreInitialize" or "Initialize","safespace",function(self)
 	SafeSpace:MakeInterior(self)
