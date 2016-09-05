@@ -39,10 +39,7 @@ if SERVER then
 		
 		ent:SetPos(pos)
 		ent:SetAngles(ang)
-		ent:SetCreator(ply)
-		if CPPI then
-			ent:CPPISetOwner(ply)
-		end
+		Doors:SetupOwner(ent,ply)
 		ent:Spawn()
 		ent:Activate()
 		
