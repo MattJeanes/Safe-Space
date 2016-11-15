@@ -192,6 +192,8 @@ function SafeSpace:GetInteriorPortalDimensions(ent)
 end
 
 function SafeSpace:GetExteriorLighting(ent)
+	if not ent then return end
+	if not ent:GetDimensions() then return end
 	local dim=ent:GetDimensions()
 	local idim=ent.interior:GetDimensions()
 	local portal=ent:GetPortalDimensions()
