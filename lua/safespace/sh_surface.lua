@@ -3,31 +3,31 @@
 local custom_surfacetypes = {}
 local valid_surfacetypes = {} --a confirmation global list to make sure the client doesn't load in surface types not on the list
 function SafeSpace:AddCustomSurface(displayname, surfaceid, category, icon, categoryicon)
-	if not surfaceid or not displayname then return end
+    if not surfaceid or not displayname then return end
 
-	if util.GetSurfaceIndex( surfaceid )==-1 then 
-		print("\n-----------------\nSafe Space: The SurfaceID \""..surfaceid.."\" provided for \""..displayname.."\" is invalid.\n")
-		print("For a complete list of valid surfaces, please visit:\n")
-		print("https://developer.valvesoftware.com/wiki/Material_surface_properties\n\n-----------------")
-		return
-	end
+    if util.GetSurfaceIndex( surfaceid )==-1 then 
+        print("\n-----------------\nSafe Space: The SurfaceID \""..surfaceid.."\" provided for \""..displayname.."\" is invalid.\n")
+        print("For a complete list of valid surfaces, please visit:\n")
+        print("https://developer.valvesoftware.com/wiki/Material_surface_properties\n\n-----------------")
+        return
+    end
 
-	category = category or "Unspecified"
+    category = category or "Unspecified"
 
-	if not custom_surfacetypes[category] then
-		custom_surfacetypes[category] = {}
-	end
+    if not custom_surfacetypes[category] then
+        custom_surfacetypes[category] = {}
+    end
 
-	custom_surfacetypes[category].icon = categoryicon or custom_surfacetypes[category].icon or ""
+    custom_surfacetypes[category].icon = categoryicon or custom_surfacetypes[category].icon or ""
 
-	custom_surfacetypes[category][displayname] = {}
-	custom_surfacetypes[category][displayname].icon = icon or custom_surfacetypes[category].icon or "" --Set it to the parent icon if not specified
-	custom_surfacetypes[category][displayname].real = surfaceid
-	table.insert(valid_surfacetypes,surfaceid)
+    custom_surfacetypes[category][displayname] = {}
+    custom_surfacetypes[category][displayname].icon = icon or custom_surfacetypes[category].icon or "" --Set it to the parent icon if not specified
+    custom_surfacetypes[category][displayname].real = surfaceid
+    table.insert(valid_surfacetypes,surfaceid)
 end
 
 function SafeSpace:GetCustomSurfaces()
-	return custom_surfacetypes
+    return custom_surfacetypes
 end
 
 --Surface Reference: https://developer.valvesoftware.com/wiki/Material_surface_properties
@@ -69,10 +69,10 @@ SafeSpace:AddCustomSurface("Cardboard","cardboard","Misc")
 SafeSpace:AddCustomSurface("Glass","glass","Misc")
 
 function SafeSpace:GetSurfaceProperty(ply)
-	local surfacetype = ply:GetInfo("safespace_global_surface")
-	if table.HasValue(valid_surfacetypes,surfacetype) and util.GetSurfaceIndex(surfacetype) ~= -1 then
-		return surfacetype
-	else
-		return "metal"
-	end
+    local surfacetype = ply:GetInfo("safespace_global_surface")
+    if table.HasValue(valid_surfacetypes,surfacetype) and util.GetSurfaceIndex(surfacetype) ~= -1 then
+        return surfacetype
+    else
+        return "metal"
+    end
 end
