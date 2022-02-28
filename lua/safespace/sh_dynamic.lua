@@ -167,7 +167,8 @@ function SafeSpace:GetExteriorPortalDimensions(ent)
         pos = Vector(0,0,dim.height/2),
         ang = Angle(0,0,0),
         width = dim.width-dim.size,
-        height = dim.height
+        height = dim.height,
+        seamless = true
     }
 end
 
@@ -187,7 +188,8 @@ function SafeSpace:GetInteriorPortalDimensions(ent)
         pos = Vector(-((dim.width/2)-dim.size)+5-(edim.size/2),0,(-dim.height/2)+(edim.height/2)-(dim.size/2)),
         ang = Angle(0,0,0),
         width = edim.width-edim.size,
-        height = edim.height
+        height = edim.height,
+        seamless = true
     }
 end
 
